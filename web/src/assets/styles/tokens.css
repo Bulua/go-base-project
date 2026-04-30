@@ -1,0 +1,112 @@
+/* ══════════════════════════════════════════
+   BaseProject — Design Tokens
+   Ported from development-plan/web-design/styles.css
+   ══════════════════════════════════════════ */
+
+:root {
+  --hue: 250;
+
+  --primary: oklch(0.52 0.18 var(--hue));
+  --primary-hover: oklch(0.46 0.18 var(--hue));
+  --primary-active: oklch(0.41 0.18 var(--hue));
+  --primary-light: oklch(0.96 0.04 var(--hue));
+  --primary-dim: oklch(0.82 0.10 var(--hue));
+
+  --bg-page: #edeef1;
+  --bg-surface: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-mask: rgba(0, 0, 0, 0.55);
+
+  --sidebar-bg: #1a2332;
+  --sidebar-item-text: rgba(255, 255, 255, 0.68);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.07);
+  --sidebar-active-bg: var(--primary);
+  --sidebar-active-text: #ffffff;
+  --sidebar-divider: rgba(255, 255, 255, 0.07);
+  --sidebar-logo-text: #ffffff;
+
+  --text-primary: #1a202c;
+  --text-secondary: #718096;
+  --text-tertiary: #a0aec0;
+  --text-disabled: #cbd5e0;
+  --text-inverse: #ffffff;
+
+  --border: #d8dce4;
+  --border-strong: #b8bfcc;
+
+  --success: oklch(0.52 0.15 145);
+  --success-light: oklch(0.96 0.04 145);
+  --success-text: oklch(0.38 0.14 145);
+  --warning: oklch(0.68 0.16 72);
+  --warning-light: oklch(0.97 0.04 72);
+  --warning-text: oklch(0.46 0.14 72);
+  --danger: oklch(0.52 0.20 25);
+  --danger-light: oklch(0.97 0.04 25);
+  --danger-text: oklch(0.38 0.18 25);
+  --info: oklch(0.52 0.15 220);
+  --info-light: oklch(0.96 0.04 220);
+  --info-text: oklch(0.38 0.14 220);
+
+  --shadow-xs: 0 1px 0px rgba(0, 0, 0, 0.08), 1px 1px 0 rgba(0, 0, 0, 0.04);
+  --shadow-sm: 2px 2px 0px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 3px 3px 0px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 4px 4px 0px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.07);
+  --shadow-xl: 6px 6px 0px rgba(0, 0, 0, 0.14), 0 8px 24px rgba(0, 0, 0, 0.09);
+
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-2xl: 8px;
+  --radius-full: 9999px;
+
+  --font-sans: 'Plus Jakarta Sans', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  --sidebar-w: 240px;
+  --sidebar-col: 64px;
+  --navbar-h: 60px;
+
+  --t: 0.18s ease;
+  --t-slow: 0.30s ease;
+}
+
+[data-theme='dark'] {
+  --bg-page: #0d1117;
+  --bg-surface: #161b27;
+  --bg-elevated: #1e2435;
+  --bg-mask: rgba(0, 0, 0, 0.65);
+
+  --sidebar-bg: #0f1520;
+  --sidebar-item-text: rgba(255, 255, 255, 0.55);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.06);
+  --sidebar-divider: rgba(255, 255, 255, 0.05);
+
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --text-disabled: #475569;
+
+  --border: #2d3748;
+  --border-strong: #4a5568;
+
+  --shadow-xs: 0 1px 0 rgba(0, 0, 0, 0.30), 1px 1px 0 rgba(0, 0, 0, 0.20);
+  --shadow-sm: 2px 2px 0 rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.30);
+  --shadow-md: 3px 3px 0 rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 4px 4px 0 rgba(0, 0, 0, 0.50), 0 4px 12px rgba(0, 0, 0, 0.32);
+  --shadow-xl: 6px 6px 0 rgba(0, 0, 0, 0.55), 0 8px 24px rgba(0, 0, 0, 0.40);
+}
+
+@keyframes bpFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bpSlideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bpSpin {
+  to { transform: rotate(360deg); }
+}

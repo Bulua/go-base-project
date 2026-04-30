@@ -1,0 +1,31 @@
+# Local planning and design references
+development-plan/
+
+# Environment files
+.env
+!.env.example
+server/configs/config.yaml
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.claude/
+
+# Logs
+*.log
+logs/
+
+# Go
+server/bin/
+server/tmp/
+server/coverage.out
+
+# Node/Vue
+web/node_modules/
+web/dist/
+web/.vite/
+
+# Docker/local data
+data/
