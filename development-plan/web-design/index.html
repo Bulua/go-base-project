@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BaseProject — 基座管理平台</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Theming engine (plain JS, runs first) -->
+  <script src="tokens.js"></script>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Tweaks panel -->
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+
+  <!-- Components (load order matters) -->
+  <script type="text/babel" src="components/Button.jsx"></script>
+  <script type="text/babel" src="components/Input.jsx"></script>
+  <script type="text/babel" src="components/Badge.jsx"></script>
+  <script type="text/babel" src="components/Card.jsx"></script>
+  <script type="text/babel" src="components/Form.jsx"></script>
+  <script type="text/babel" src="components/Alert.jsx"></script>
+  <script type="text/babel" src="components/Dropdown.jsx"></script>
+  <script type="text/babel" src="components/Pagination.jsx"></script>
+  <script type="text/babel" src="components/Table.jsx"></script>
+  <script type="text/babel" src="components/Modal.jsx"></script>
+  <script type="text/babel" src="components/Layout.jsx"></script>
+
+  <!-- Pages -->
+  <script type="text/babel" src="pages/Login.jsx"></script>
+  <script type="text/babel" src="pages/Dashboard.jsx"></script>
+  <script type="text/babel" src="pages/UserManagement.jsx"></script>
+  <script type="text/babel" src="pages/RoleManagement.jsx"></script>
+  <script type="text/babel" src="pages/MenuManagement.jsx"></script>
+  <script type="text/babel" src="pages/ApiManagement.jsx"></script>
+  <script type="text/babel" src="pages/DictManagement.jsx"></script>
+  <script type="text/babel" src="pages/OperationHistory.jsx"></script>
+  <script type="text/babel" src="pages/LoginLogs.jsx"></script>
+  <script type="text/babel" src="pages/SystemConfig.jsx"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    // ── Tweak Defaults ─────────────────────────────
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "darkMode": false,
+      "themeHue": 205,
+      "themePreset": "蓝色",
+      "sidebarCollapsed": false
+    }/*EDITMODE-END*/;
+
+    // ── Page Map ───────────────────────────────────
+    const PAGE_MAP = {
+      dashboard: Dashboard,
+      user:      UserManagement,
+      role:      RoleManagement,
+      menu:      MenuManagement,
+      api:       ApiManagement,
+      dict:      DictManagement,
+      oplog:     OperationHistory,
+      loginlog:  LoginLogs,
+      config:    SystemConfig,
+    };
+
+    // ── Main App ───────────────────────────────────
+    const App = () => {
+      const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
+        try { return localStorage.getItem('bp-loggedin') === '1'; } catch(e) { return false; }
+      });
+      const [currentUser, setCurrentUser] = React.useState(() => {
+        try { return localStorage.getItem('bp-user') || 'Admin'; } catch(e) { return 'Admin'; }
+      });
+      const [currentPage, setCurrentPage] = React.useState(() => {
+        try { return localStorage.getItem('bp-page') || 'dashboard'; } catch(e) { return 'dashboard'; }
+      });
+      const [collapsed, setCollapsed] = React.useState(TWEAK_DEFAULTS.sidebarCollapsed);
+      const [isDark, setIsDark] = React.useState(BaseTokens.isDark());
+
+      // Sync Tweaks
+      const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+      React.useEffect(() => {
+        BaseTokens.applyDark(tweaks.darkMode);
+        setIsDark(tweaks.darkMode);
+      }, [tweaks.darkMode]);
+
+      React.useEffect(() => {
+        BaseTokens.applyHue(tweaks.themeHue);
+      }, [tweaks.themeHue]);
+
+      React.useEffect(() => {
+        setCollapsed(tweaks.sidebarCollapsed);
+      }, [tweaks.sidebarCollapsed]);
+
+      const handleLogin = ({ username }) => {
+        setCurrentUser(username);
+        setIsLoggedIn(true);
+        try { localStorage.setItem('bp-loggedin', '1'); localStorage.setItem('bp-user', username); } catch(e) {}
+        window.toast && window.toast.success(`欢迎回来，${username}！`);
+      };
+
+      const handleLogout = () => {
+        setIsLoggedIn(false);
+        try { localStorage.removeItem('bp-loggedin'); } catch(e) {}
+        window.toast && window.toast.info('已退出登录');
+      };
+
+      const handleNavigate = (page) => {
+        setCurrentPage(page);
+        try { localStorage.setItem('bp-page', page); } catch(e) {}
+      };
+
+      const handleToggleDark = () => {
+        const next = !isDark;
+        setIsDark(next);
+        BaseTokens.applyDark(next);
+        setTweak('darkMode', next);
+      };
+
+      const PageComponent = PAGE_MAP[currentPage] || Dashboard;
+
+      if (!isLoggedIn) {
+        return (
+          <>
+            <Login onLogin={handleLogin} />
+            <ToastContainer />
+          </>
+        );
+      }
+
+      return (
+        <>
+          <div className="bp-app">
+            <Sidebar
+              currentPage={currentPage}
+              onNavigate={handleNavigate}
+              collapsed={collapsed}
+              onToggleCollapse={() => {
+                setCollapsed(p => {
+                  const next = !p;
+                  setTweak('sidebarCollapsed', next);
+                  return next;
+                });
+              }}
+            />
+            <div className="bp-main-area">
+              <Navbar
+                currentPage={currentPage}
+                username={currentUser}
+                onLogout={handleLogout}
+                onToggleDark={handleToggleDark}
+                isDark={isDark}
+              />
+              <main className="bp-content">
+                <PageComponent />
+              </main>
+            </div>
+          </div>
+
+          <ToastContainer />
+
+          {/* Tweaks Panel */}
+          <TweaksPanel>
+            <TweakSection title="外观">
+              <TweakToggle id="darkMode" label="深色模式" />
+              <TweakSlider id="themeHue" label="主题色相" min={0} max={360} step={1} />
+              <TweakRadio id="themePreset" label="颜色预设"
+                options={Object.keys(BaseTokens.PRESET_HUES).map(k => ({ value: k, label: k }))}
+                onChange={(v) => {
+                  const h = BaseTokens.PRESET_HUES[v];
+                  if (h) { BaseTokens.applyHue(h); setTweak('themeHue', h); }
+                }}
+              />
+            </TweakSection>
+            <TweakSection title="布局">
+              <TweakToggle id="sidebarCollapsed" label="收起侧边栏" />
+            </TweakSection>
+            <TweakSection title="操作">
+              <TweakButton label="显示成功提示" onClick={() => window.toast.success('操作成功！这是一条成功通知')} />
+              <TweakButton label="显示警告提示" onClick={() => window.toast.warning('注意！这是一条警告通知')} />
+              <TweakButton label="显示错误提示" onClick={() => window.toast.error('发生错误！这是一条错误通知')} />
+            </TweakSection>
+          </TweaksPanel>
+        </>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
