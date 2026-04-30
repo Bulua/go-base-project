@@ -2,11 +2,11 @@ package rolehandler
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"gobaseproject/server/internal/apperror"
 	rolemodel "gobaseproject/server/internal/model/role"
 	authservice "gobaseproject/server/internal/service/auth"
 	roleservice "gobaseproject/server/internal/service/role"
@@ -56,7 +56,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ rolemodel.Actor
 	}
 	result, err := h.service.List(r.Context(), q)
 	if err != nil {
-		response.Error(w, r, http.StatusInternalServerError, 500, "list roles failed: "+err.Error())
+		apperror.Write(w, r, err)
 		return
 	}
 	response.OK(w, r, result)
@@ -65,7 +65,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, _ rolemodel.Actor
 func (h *Handler) tree(w http.ResponseWriter, r *http.Request, _ rolemodel.ActorContext) {
 	tree, err := h.service.Tree(r.Context())
 	if err != nil {
-		response.Error(w, r, http.StatusInternalServerError, 500, "load role tree failed: "+err.Error())
+		apperror.Write(w, r, err)
 		return
 	}
 	response.OK(w, r, tree)
@@ -74,7 +74,7 @@ func (h *Handler) tree(w http.ResponseWriter, r *http.Request, _ rolemodel.Actor
 func (h *Handler) resources(w http.ResponseWriter, r *http.Request, _ rolemodel.ActorContext) {
 	data, err := h.service.ResourceCatalog(r.Context())
 	if err != nil {
-		response.Error(w, r, http.StatusInternalServerError, 500, "load resources failed: "+err.Error())
+		apperror.Write(w, r, err)
 		return
 	}
 	response.OK(w, r, data)
@@ -96,7 +96,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, _ rolemodel.ActorC
 func (h *Handler) create(w http.ResponseWriter, r *http.Request, actor rolemodel.ActorContext) {
 	var req rolemodel.CreateRequest
 	if err := response.ReadJSON(r, &req); err != nil {
-		response.Error(w, r, http.StatusBadRequest, 400, "invalid request body")
+		apperror.WriteDefinition(w, r, apperror.InvalidRequestBody)
 		return
 	}
 	role, err := h.service.Create(r.Context(), req, actor)
@@ -114,7 +114,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request, actor rolemodel
 	}
 	var req rolemodel.UpdateRequest
 	if err := response.ReadJSON(r, &req); err != nil {
-		response.Error(w, r, http.StatusBadRequest, 400, "invalid request body")
+		apperror.WriteDefinition(w, r, apperror.InvalidRequestBody)
 		return
 	}
 	role, err := h.service.Update(r.Context(), id, req, actor)
@@ -187,7 +187,7 @@ func (h *Handler) assignIDs(w http.ResponseWriter, r *http.Request, actor rolemo
 	}
 	var req rolemodel.AssignIDsRequest
 	if err := response.ReadJSON(r, &req); err != nil {
-		response.Error(w, r, http.StatusBadRequest, 400, "invalid request body")
+		apperror.WriteDefinition(w, r, apperror.InvalidRequestBody)
 		return
 	}
 	if err := fn(r.Context(), id, req.IDs, actor); err != nil {
@@ -203,12 +203,12 @@ func (h *Handler) withAuth(next func(http.ResponseWriter, *http.Request, rolemod
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := bearerToken(r)
 		if token == "" {
-			response.Error(w, r, http.StatusUnauthorized, 401, "missing authorization token")
+			apperror.WriteDefinition(w, r, apperror.MissingAuthToken)
 			return
 		}
 		claims, err := h.tokens.ParseAccessToken(r.Context(), token)
 		if err != nil {
-			response.Error(w, r, http.StatusUnauthorized, 401, "invalid or expired token")
+			apperror.WriteDefinition(w, r, apperror.InvalidAuthToken)
 			return
 		}
 		actor := rolemodel.ActorContext{
@@ -227,7 +227,7 @@ func parseIDFromPath(w http.ResponseWriter, r *http.Request) (uint64, bool) {
 	raw := r.PathValue("id")
 	id, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil || id == 0 {
-		response.Error(w, r, http.StatusBadRequest, 400, "invalid role id")
+		apperror.WriteDefinition(w, r, apperror.InvalidRoleID)
 		return 0, false
 	}
 	return id, true
@@ -245,26 +245,7 @@ func parseIntDefault(raw string, def int) int {
 }
 
 func writeRoleError(w http.ResponseWriter, r *http.Request, err error) {
-	switch {
-	case errors.Is(err, rolemodel.ErrRoleNotFound):
-		response.Error(w, r, http.StatusNotFound, 404, "role not found")
-	case errors.Is(err, rolemodel.ErrRoleCodeTaken):
-		response.Error(w, r, http.StatusConflict, 409, "role code already exists")
-	case errors.Is(err, rolemodel.ErrRoleCodeInvalid):
-		response.Error(w, r, http.StatusBadRequest, 400, "role code must start with a lowercase letter and be 3-64 chars of [a-z0-9_]")
-	case errors.Is(err, rolemodel.ErrInvalidStatus):
-		response.Error(w, r, http.StatusBadRequest, 400, "invalid role status")
-	case errors.Is(err, rolemodel.ErrBuiltinProtect):
-		response.Error(w, r, http.StatusForbidden, 403, "built-in role is protected")
-	case errors.Is(err, rolemodel.ErrRoleHasUsers):
-		response.Error(w, r, http.StatusConflict, 409, "role still has users assigned, deassign them first")
-	case errors.Is(err, rolemodel.ErrRoleHasChildren):
-		response.Error(w, r, http.StatusConflict, 409, "role still has child roles, remove them first")
-	case errors.Is(err, rolemodel.ErrParentLoop):
-		response.Error(w, r, http.StatusBadRequest, 400, "parent role would create a cycle")
-	default:
-		response.Error(w, r, http.StatusInternalServerError, 500, "internal server error: "+err.Error())
-	}
+	apperror.Write(w, r, err)
 }
 
 func bearerToken(r *http.Request) string {

@@ -99,6 +99,17 @@ VALUES (?, ?, ?, ?, ?, ?)`,
 	return err
 }
 
+func (r *SQLRepository) UpdateLastLoginAt(ctx context.Context, userID uint64, lastLoginAt time.Time) error {
+	_, err := r.db.ExecContext(ctx, `
+UPDATE gbp_users
+SET last_login_at = ?
+WHERE id = ? AND deleted_at IS NULL`,
+		lastLoginAt,
+		userID,
+	)
+	return err
+}
+
 func (r *SQLRepository) InsertTokenBlocklist(ctx context.Context, tokenHash string, expiresAt time.Time, reason string) error {
 	_, err := r.db.ExecContext(ctx, `
 INSERT INTO gbp_jwt_blocklist (token_hash, expires_at, logout_reason)

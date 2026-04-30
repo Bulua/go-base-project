@@ -58,6 +58,12 @@ func TestServiceLoginReturnsTokensForAdminCredentials(t *testing.T) {
 	if len(repo.loginAudits) != 1 || !repo.loginAudits[0].LoginSuccess {
 		t.Fatalf("expected successful login audit, got %#v", repo.loginAudits)
 	}
+	if repo.lastLoginUserID != 1 {
+		t.Fatalf("expected last login to be updated for user 1, got %d", repo.lastLoginUserID)
+	}
+	if !repo.lastLoginAt.Equal(time.Unix(1000, 0).UTC()) {
+		t.Fatalf("expected last login at test clock, got %s", repo.lastLoginAt)
+	}
 }
 
 func TestServiceLoginRejectsWrongPasswordAndAuditsFailure(t *testing.T) {
@@ -136,10 +142,12 @@ func TestServiceLogoutBlocksPresentedToken(t *testing.T) {
 }
 
 type fakeRepository struct {
-	user          *authmodel.User
-	roles         []authmodel.Role
-	loginAudits   []authmodel.LoginAudit
-	blockedTokens map[string]authmodel.BlockedToken
+	user            *authmodel.User
+	roles           []authmodel.Role
+	loginAudits     []authmodel.LoginAudit
+	blockedTokens   map[string]authmodel.BlockedToken
+	lastLoginUserID uint64
+	lastLoginAt     time.Time
 }
 
 func (r *fakeRepository) FindUserByLogin(ctx context.Context, loginName string) (*authmodel.User, error) {
@@ -156,6 +164,12 @@ func (r *fakeRepository) ListRolesByUserID(ctx context.Context, userID uint64) (
 
 func (r *fakeRepository) InsertLoginAudit(ctx context.Context, audit authmodel.LoginAudit) error {
 	r.loginAudits = append(r.loginAudits, audit)
+	return nil
+}
+
+func (r *fakeRepository) UpdateLastLoginAt(ctx context.Context, userID uint64, lastLoginAt time.Time) error {
+	r.lastLoginUserID = userID
+	r.lastLoginAt = lastLoginAt
 	return nil
 }
 

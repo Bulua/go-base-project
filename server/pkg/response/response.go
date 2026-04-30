@@ -11,7 +11,7 @@ import (
 type Body struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
+	Data    interface{} `json:"data"`
 	TraceID string      `json:"trace_id,omitempty"`
 }
 
@@ -41,19 +41,6 @@ func WriteJSON(w http.ResponseWriter, status int, value interface{}) {
 func ReadJSON(r *http.Request, target interface{}) error {
 	defer r.Body.Close()
 	return json.NewDecoder(r.Body).Decode(target)
-}
-
-func AllowMethod(w http.ResponseWriter, r *http.Request, method string) bool {
-	if r.Method == method {
-		return true
-	}
-	w.Header().Set("Allow", method)
-	WriteJSON(w, http.StatusMethodNotAllowed, Body{
-		Code:    405,
-		Message: "method not allowed",
-		TraceID: TraceID(r),
-	})
-	return false
 }
 
 func TraceID(r *http.Request) string {

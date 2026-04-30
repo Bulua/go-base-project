@@ -12,6 +12,7 @@ type Repository interface {
 	FindUserByLogin(ctx context.Context, loginName string) (*authmodel.User, error)
 	ListRolesByUserID(ctx context.Context, userID uint64) ([]authmodel.Role, error)
 	InsertLoginAudit(ctx context.Context, audit authmodel.LoginAudit) error
+	UpdateLastLoginAt(ctx context.Context, userID uint64, lastLoginAt time.Time) error
 	InsertTokenBlocklist(ctx context.Context, tokenHash string, expiresAt time.Time, reason string) error
 	IsTokenBlocked(ctx context.Context, tokenHash string) (bool, error)
 	ListMenusByUserID(ctx context.Context, userID uint64) ([]authmodel.Menu, error)
@@ -69,6 +70,11 @@ func (s *Service) Login(ctx context.Context, req authmodel.LoginRequest, meta au
 			FailReason:   "invalid credentials",
 		})
 		return authmodel.Session{}, authmodel.ErrInvalidCredentials
+	}
+
+	now := s.tokens.clock().UTC()
+	if err := s.repo.UpdateLastLoginAt(ctx, user.ID, now); err != nil {
+		return authmodel.Session{}, err
 	}
 
 	roles, err := s.repo.ListRolesByUserID(ctx, user.ID)

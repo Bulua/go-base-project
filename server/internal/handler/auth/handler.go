@@ -2,10 +2,10 @@ package authhandler
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strings"
 
+	"gobaseproject/server/internal/apperror"
 	authmodel "gobaseproject/server/internal/model/auth"
 	authservice "gobaseproject/server/internal/service/auth"
 	"gobaseproject/server/pkg/response"
@@ -36,35 +36,35 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
-	if !response.AllowMethod(w, r, http.MethodPost) {
+	if !apperror.AllowMethod(w, r, http.MethodPost) {
 		return
 	}
 	var req authmodel.LoginRequest
 	if err := response.ReadJSON(r, &req); err != nil {
-		response.Error(w, r, http.StatusBadRequest, 400, "invalid request body")
+		apperror.WriteDefinition(w, r, apperror.InvalidRequestBody)
 		return
 	}
 	session, err := h.service.Login(r.Context(), req, requestMeta(r))
 	if err != nil {
-		writeAuthError(w, r, err)
+		apperror.Write(w, r, err)
 		return
 	}
 	response.OK(w, r, session)
 }
 
 func (h *Handler) logout(w http.ResponseWriter, r *http.Request, current Context) {
-	if !response.AllowMethod(w, r, http.MethodPost) {
+	if !apperror.AllowMethod(w, r, http.MethodPost) {
 		return
 	}
 	if err := h.service.Logout(r.Context(), current.Token, "logout"); err != nil {
-		writeAuthError(w, r, err)
+		apperror.Write(w, r, err)
 		return
 	}
 	response.OK(w, r, map[string]bool{"success": true})
 }
 
 func (h *Handler) refresh(w http.ResponseWriter, r *http.Request) {
-	if !response.AllowMethod(w, r, http.MethodPost) {
+	if !apperror.AllowMethod(w, r, http.MethodPost) {
 		return
 	}
 	var req authmodel.RefreshRequest
@@ -74,48 +74,48 @@ func (h *Handler) refresh(w http.ResponseWriter, r *http.Request) {
 		refreshToken = bearerToken(r)
 	}
 	if refreshToken == "" {
-		response.Error(w, r, http.StatusUnauthorized, 401, "missing refresh token")
+		apperror.WriteDefinition(w, r, apperror.MissingRefreshToken)
 		return
 	}
 	session, err := h.service.Refresh(r.Context(), refreshToken)
 	if err != nil {
-		writeAuthError(w, r, err)
+		apperror.Write(w, r, err)
 		return
 	}
 	response.OK(w, r, session)
 }
 
 func (h *Handler) profile(w http.ResponseWriter, r *http.Request, current Context) {
-	if !response.AllowMethod(w, r, http.MethodGet) {
+	if !apperror.AllowMethod(w, r, http.MethodGet) {
 		return
 	}
 	user, err := h.service.Profile(r.Context(), current.Claims.UserID, current.Claims.LoginName)
 	if err != nil {
-		writeAuthError(w, r, err)
+		apperror.Write(w, r, err)
 		return
 	}
 	response.OK(w, r, user)
 }
 
 func (h *Handler) routes(w http.ResponseWriter, r *http.Request, current Context) {
-	if !response.AllowMethod(w, r, http.MethodGet) {
+	if !apperror.AllowMethod(w, r, http.MethodGet) {
 		return
 	}
 	menus, err := h.service.Routes(r.Context(), current.Claims.UserID)
 	if err != nil {
-		response.Error(w, r, http.StatusInternalServerError, 500, "query routes failed")
+		apperror.Write(w, r, err)
 		return
 	}
 	response.OK(w, r, menus)
 }
 
 func (h *Handler) actions(w http.ResponseWriter, r *http.Request, current Context) {
-	if !response.AllowMethod(w, r, http.MethodGet) {
+	if !apperror.AllowMethod(w, r, http.MethodGet) {
 		return
 	}
 	actions, err := h.service.Actions(r.Context(), current.Claims.UserID)
 	if err != nil {
-		response.Error(w, r, http.StatusInternalServerError, 500, "query actions failed")
+		apperror.Write(w, r, err)
 		return
 	}
 	response.OK(w, r, actions)
@@ -125,30 +125,17 @@ func (h *Handler) withAuth(next func(http.ResponseWriter, *http.Request, Context
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := bearerToken(r)
 		if token == "" {
-			response.Error(w, r, http.StatusUnauthorized, 401, "missing authorization token")
+			apperror.WriteDefinition(w, r, apperror.MissingAuthToken)
 			return
 		}
 		claims, err := h.service.ParseAccessToken(r.Context(), token)
 		if err != nil {
-			writeAuthError(w, r, err)
+			apperror.Write(w, r, err)
 			return
 		}
 		current := Context{Token: token, Claims: claims}
 		ctx := context.WithValue(r.Context(), contextKey{}, current)
 		next(w, r.WithContext(ctx), current)
-	}
-}
-
-func writeAuthError(w http.ResponseWriter, r *http.Request, err error) {
-	switch {
-	case errors.Is(err, authmodel.ErrInvalidCredentials):
-		response.Error(w, r, http.StatusUnauthorized, 401, "invalid login name or password")
-	case errors.Is(err, authmodel.ErrUserDisabled):
-		response.Error(w, r, http.StatusForbidden, 403, "user disabled")
-	case errors.Is(err, authmodel.ErrInvalidToken), errors.Is(err, authmodel.ErrTokenBlocked):
-		response.Error(w, r, http.StatusUnauthorized, 401, "invalid or expired token")
-	default:
-		response.Error(w, r, http.StatusInternalServerError, 500, "internal server error")
 	}
 }
 
