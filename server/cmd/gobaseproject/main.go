@@ -8,14 +8,17 @@ import (
 	"time"
 
 	authhandler "gobaseproject/server/internal/handler/auth"
+	menuhandler "gobaseproject/server/internal/handler/menu"
 	rolehandler "gobaseproject/server/internal/handler/role"
 	userhandler "gobaseproject/server/internal/handler/user"
 	"gobaseproject/server/internal/infra/config"
 	auditrepo "gobaseproject/server/internal/repository/audit"
 	authrepo "gobaseproject/server/internal/repository/auth"
+	menurepo "gobaseproject/server/internal/repository/menu"
 	rolerepo "gobaseproject/server/internal/repository/role"
 	userrepo "gobaseproject/server/internal/repository/user"
 	authservice "gobaseproject/server/internal/service/auth"
+	menuservice "gobaseproject/server/internal/service/menu"
 	roleservice "gobaseproject/server/internal/service/role"
 	userservice "gobaseproject/server/internal/service/user"
 	"gobaseproject/server/pkg/response"
@@ -52,12 +55,14 @@ func main() {
 	auditRepository := auditrepo.NewSQLRepository(db)
 	userService := userservice.NewService(userrepo.NewSQLRepository(db), auditRepository)
 	roleService := roleservice.NewService(rolerepo.NewSQLRepository(db), auditRepository)
+	menuService := menuservice.NewService(menurepo.NewSQLRepository(db))
 
 	mux := http.NewServeMux()
 	registerSystemRoutes(mux, cfg)
 	authhandler.NewHandler(authService).RegisterRoutes(mux)
 	userhandler.NewHandler(userService, authService).RegisterRoutes(mux)
 	rolehandler.NewHandler(roleService, authService).RegisterRoutes(mux)
+	menuhandler.NewHandler(menuService, authService, cfg.CodeGen.WebSrcRoot).RegisterRoutes(mux)
 
 	server := &http.Server{
 		Addr:              ":" + cfg.App.Port,

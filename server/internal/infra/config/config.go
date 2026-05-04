@@ -23,6 +23,13 @@ type Config struct {
 	Database DatabaseConfig `yaml:"database"`
 	Redis    RedisConfig    `yaml:"redis"`
 	JWT      JWTConfig      `yaml:"jwt"`
+	CodeGen  CodeGenConfig  `yaml:"codegen"`
+}
+
+type CodeGenConfig struct {
+	// WebSrcRoot is the path to web/src, relative to the server working directory.
+	// Leave empty to disable auto file generation (e.g. in Docker).
+	WebSrcRoot string `yaml:"web_src_root"`
 }
 
 type AppConfig struct {

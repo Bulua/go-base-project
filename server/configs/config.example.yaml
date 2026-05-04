@@ -21,3 +21,8 @@ jwt:
   secret: change-me-in-production
   access_token_ttl_minutes: 120
   refresh_token_ttl_minutes: 10080
+
+codegen:
+  # Path to web/src relative to server working directory.
+  # Set to empty string to disable auto file generation (e.g. in Docker).
+  web_src_root: ../web/src

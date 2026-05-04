@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	authmodel "gobaseproject/server/internal/model/auth"
+	menumodel "gobaseproject/server/internal/model/menu"
 	rolemodel "gobaseproject/server/internal/model/role"
 	usermodel "gobaseproject/server/internal/model/user"
 	"gobaseproject/server/pkg/response"
@@ -20,6 +21,7 @@ var (
 	InvalidRequestBody  = Definition{Code: 400001, Status: http.StatusBadRequest, Message: "请求参数格式不正确"}
 	InvalidUserID       = Definition{Code: 400201, Status: http.StatusBadRequest, Message: "用户ID不正确"}
 	InvalidRoleID       = Definition{Code: 400301, Status: http.StatusBadRequest, Message: "角色ID不正确"}
+	InvalidMenuID       = Definition{Code: 400401, Status: http.StatusBadRequest, Message: "菜单ID不正确"}
 	MissingAuthToken    = Definition{Code: 401001, Status: http.StatusUnauthorized, Message: "缺少登录凭证"}
 	InvalidAuthToken    = Definition{Code: 401002, Status: http.StatusUnauthorized, Message: "登录状态已失效，请重新登录"}
 	MissingRefreshToken = Definition{Code: 401003, Status: http.StatusUnauthorized, Message: "缺少刷新凭证"}
@@ -50,6 +52,15 @@ var registry = []struct {
 	{rolemodel.ErrRoleHasUsers, Definition{Code: 409302, Status: http.StatusConflict, Message: "角色下仍有关联用户，请先解除关联"}},
 	{rolemodel.ErrRoleHasChildren, Definition{Code: 409303, Status: http.StatusConflict, Message: "角色下仍有子角色，请先删除子角色"}},
 	{rolemodel.ErrParentLoop, Definition{Code: 400304, Status: http.StatusBadRequest, Message: "上级角色不能形成循环关系"}},
+	{menumodel.ErrMenuNotFound, Definition{Code: 404401, Status: http.StatusNotFound, Message: "菜单不存在"}},
+	{menumodel.ErrMenuTitleEmpty, Definition{Code: 400402, Status: http.StatusBadRequest, Message: "菜单名称不能为空"}},
+	{menumodel.ErrInvalidType, Definition{Code: 400403, Status: http.StatusBadRequest, Message: "菜单类型不正确"}},
+	{menumodel.ErrInvalidStatus, Definition{Code: 400404, Status: http.StatusBadRequest, Message: "菜单状态不正确"}},
+	{menumodel.ErrParentNotFound, Definition{Code: 404402, Status: http.StatusNotFound, Message: "上级菜单不存在"}},
+	{menumodel.ErrHasChildren, Definition{Code: 409401, Status: http.StatusConflict, Message: "菜单下仍有子菜单，请先删除子菜单"}},
+	{menumodel.ErrParamNotFound, Definition{Code: 404403, Status: http.StatusNotFound, Message: "路由参数不存在"}},
+	{menumodel.ErrParamKeyEmpty, Definition{Code: 400405, Status: http.StatusBadRequest, Message: "参数键名不能为空"}},
+	{menumodel.ErrParamModeBad, Definition{Code: 400406, Status: http.StatusBadRequest, Message: "参数模式必须为 query 或 path"}},
 }
 
 func Write(w http.ResponseWriter, r *http.Request, err error) {

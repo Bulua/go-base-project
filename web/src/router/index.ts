@@ -30,16 +30,21 @@ export const router = createRouter({
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
-  if (!to.meta.public && !auth.isAuthenticated) {
+
+  if (!auth.isAuthenticated) {
+    if (to.name === 'Login') return true
     return { path: '/login', query: { redirect: to.fullPath } }
   }
-  if (to.path === '/login' && auth.isAuthenticated) {
+
+  if (to.path === '/login') {
     return { path: '/' }
   }
-  if (auth.isAuthenticated && auth.menuRoutes.length === 0) {
+
+  if (auth.menuRoutes.length === 0) {
     await auth.loadWorkspace()
     return { path: to.fullPath, replace: true }
   }
+
   return true
 })
 
