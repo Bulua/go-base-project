@@ -28,6 +28,12 @@ type Repository interface {
 	ListParams(ctx context.Context, menuID uint64) ([]menumodel.RouteParam, error)
 	CreateParam(ctx context.Context, menuID uint64, req menumodel.CreateParamRequest) (uint64, error)
 	DeleteParam(ctx context.Context, paramID uint64) error
+	ListActions(ctx context.Context, menuID uint64) ([]menumodel.MenuAction, error)
+	GetActionByID(ctx context.Context, id uint64) (*menumodel.MenuAction, error)
+	CountActionByCode(ctx context.Context, menuID uint64, code string, excludeID uint64) (int64, error)
+	CreateAction(ctx context.Context, menuID uint64, req menumodel.SaveActionRequest) (uint64, error)
+	UpdateAction(ctx context.Context, id uint64, req menumodel.SaveActionRequest) error
+	DeleteAction(ctx context.Context, id uint64) error
 }
 
 type Service struct {
@@ -162,6 +168,77 @@ func (s *Service) CreateParam(ctx context.Context, menuID uint64, req menumodel.
 
 func (s *Service) DeleteParam(ctx context.Context, paramID uint64) error {
 	return s.repo.DeleteParam(ctx, paramID)
+}
+
+// ── Actions ──────────────────────────────────────────────────────────────────
+
+func (s *Service) ListActions(ctx context.Context, menuID uint64) ([]menumodel.MenuAction, error) {
+	if _, err := s.repo.GetByID(ctx, menuID); err != nil {
+		return nil, err
+	}
+	return s.repo.ListActions(ctx, menuID)
+}
+
+func (s *Service) CreateAction(ctx context.Context, menuID uint64, req menumodel.SaveActionRequest) (*menumodel.MenuAction, error) {
+	req.ActionCode = strings.TrimSpace(req.ActionCode)
+	req.ActionName = strings.TrimSpace(req.ActionName)
+	if req.ActionCode == "" {
+		return nil, menumodel.ErrActionCodeEmpty
+	}
+	if req.ActionName == "" {
+		return nil, menumodel.ErrActionNameEmpty
+	}
+	if req.ActionStatus != menumodel.StatusActive && req.ActionStatus != menumodel.StatusDisabled {
+		req.ActionStatus = menumodel.StatusActive
+	}
+	if _, err := s.repo.GetByID(ctx, menuID); err != nil {
+		return nil, err
+	}
+	count, err := s.repo.CountActionByCode(ctx, menuID, req.ActionCode, 0)
+	if err != nil {
+		return nil, err
+	}
+	if count > 0 {
+		return nil, menumodel.ErrActionCodeTaken
+	}
+	id, err := s.repo.CreateAction(ctx, menuID, req)
+	if err != nil {
+		return nil, err
+	}
+	return s.repo.GetActionByID(ctx, id)
+}
+
+func (s *Service) UpdateAction(ctx context.Context, id uint64, req menumodel.SaveActionRequest) (*menumodel.MenuAction, error) {
+	req.ActionCode = strings.TrimSpace(req.ActionCode)
+	req.ActionName = strings.TrimSpace(req.ActionName)
+	if req.ActionCode == "" {
+		return nil, menumodel.ErrActionCodeEmpty
+	}
+	if req.ActionName == "" {
+		return nil, menumodel.ErrActionNameEmpty
+	}
+	if req.ActionStatus != menumodel.StatusActive && req.ActionStatus != menumodel.StatusDisabled {
+		req.ActionStatus = menumodel.StatusActive
+	}
+	existing, err := s.repo.GetActionByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	count, err := s.repo.CountActionByCode(ctx, existing.MenuID, req.ActionCode, id)
+	if err != nil {
+		return nil, err
+	}
+	if count > 0 {
+		return nil, menumodel.ErrActionCodeTaken
+	}
+	if err := s.repo.UpdateAction(ctx, id, req); err != nil {
+		return nil, err
+	}
+	return s.repo.GetActionByID(ctx, id)
+}
+
+func (s *Service) DeleteAction(ctx context.Context, id uint64) error {
+	return s.repo.DeleteAction(ctx, id)
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────

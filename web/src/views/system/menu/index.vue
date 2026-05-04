@@ -6,12 +6,16 @@ import {
   type CreateMenuResult,
   createMenu,
   createMenuParam,
+  createMenuAction,
   deleteMenu,
   deleteMenuParam,
+  deleteMenuAction,
   getMenuTree,
+  listMenuActions,
   updateMenu,
+  updateMenuAction,
 } from '@/api/menu'
-import type { CreateParamPayload, MenuItem, RouteParam, SaveMenuPayload } from '@/types/menu'
+import type { CreateParamPayload, MenuItem, MenuAction, RouteParam, SaveActionPayload, SaveMenuPayload } from '@/types/menu'
 
 // ── 菜单类型 ───────────────────────────────────────────────────────────────
 const MENU_TYPES = [
@@ -186,6 +190,94 @@ async function handleDeleteParam(param: RouteParam) {
     ElMessage.error(e instanceof Error ? e.message : '删除失败')
   }
 }
+
+// ── 按钮权限管理 Drawer ───────────────────────────────────────────────────
+const actionDrawerVisible = ref(false)
+const actionMenuId = ref(0)
+const actionMenuTitle = ref('')
+const actionRows = ref<MenuAction[]>([])
+const actionLoading = ref(false)
+const actionSubmitting = ref(false)
+
+const EMPTY_ACTION = (): SaveActionPayload => ({
+  action_code: '',
+  action_name: '',
+  action_desc: null,
+  sort_no: 0,
+  action_status: 1,
+})
+const actionForm = reactive<SaveActionPayload>(EMPTY_ACTION())
+const editingActionId = ref<number | null>(null)
+const actionFormVisible = ref(false)
+
+async function openActionDrawer(row: MenuItem) {
+  actionMenuId.value = row.id
+  actionMenuTitle.value = row.menu_title
+  actionDrawerVisible.value = true
+  actionLoading.value = true
+  try {
+    actionRows.value = await listMenuActions(row.id)
+  } catch (e) {
+    ElMessage.error(e instanceof Error ? e.message : '加载失败')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+function openActionCreate() {
+  Object.assign(actionForm, EMPTY_ACTION())
+  editingActionId.value = null
+  actionFormVisible.value = true
+}
+
+function openActionEdit(action: MenuAction) {
+  Object.assign(actionForm, {
+    action_code: action.action_code,
+    action_name: action.action_name,
+    action_desc: action.action_desc ?? null,
+    sort_no: action.sort_no,
+    action_status: action.action_status,
+  })
+  editingActionId.value = action.id
+  actionFormVisible.value = true
+}
+
+async function handleActionSubmit() {
+  if (!actionForm.action_code.trim()) { ElMessage.warning('请填写按钮编码'); return }
+  if (!actionForm.action_name.trim()) { ElMessage.warning('请填写按钮名称'); return }
+  actionSubmitting.value = true
+  try {
+    if (editingActionId.value) {
+      const updated = await updateMenuAction(editingActionId.value, actionForm)
+      const idx = actionRows.value.findIndex((a) => a.id === editingActionId.value)
+      if (idx !== -1) actionRows.value[idx] = updated
+      ElMessage.success('修改成功')
+    } else {
+      const created = await createMenuAction(actionMenuId.value, actionForm)
+      actionRows.value.push(created)
+      ElMessage.success('创建成功')
+    }
+    actionFormVisible.value = false
+  } catch (e) {
+    ElMessage.error(e instanceof Error ? e.message : '保存失败')
+  } finally {
+    actionSubmitting.value = false
+  }
+}
+
+async function handleActionDelete(action: MenuAction) {
+  await ElMessageBox.confirm(`确定删除按钮「${action.action_name}」？`, '删除确认', {
+    type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消',
+    confirmButtonClass: 'el-button--danger',
+  })
+  try {
+    await deleteMenuAction(action.id)
+    actionRows.value = actionRows.value.filter((a) => a.id !== action.id)
+    ElMessage.success('删除成功')
+  } catch (e) {
+    ElMessage.error(e instanceof Error ? e.message : '删除失败')
+  }
+}
 </script>
 
 <template>
@@ -243,7 +335,7 @@ async function handleDeleteParam(param: RouteParam) {
         </template>
       </el-table-column>
 
-      <el-table-column label="操作" width="200" fixed="right">
+      <el-table-column label="操作" width="240" fixed="right">
         <template #default="{ row }">
           <el-button
             v-if="row.menu_type === 1"
@@ -253,6 +345,13 @@ async function handleDeleteParam(param: RouteParam) {
             :icon="Plus"
             @click="openCreate(row.id)"
           >子菜单</el-button>
+          <el-button
+            v-if="row.menu_type === 2 || row.menu_type === 3"
+            type="warning"
+            link
+            size="small"
+            @click="openActionDrawer(row)"
+          >按钮</el-button>
           <el-button type="primary" link size="small" :icon="EditPen" @click="openEdit(row)">
             编辑
           </el-button>
@@ -383,6 +482,75 @@ async function handleDeleteParam(param: RouteParam) {
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitting" @click="handleSubmit">保存</el-button>
+      </template>
+    </el-dialog>
+    <!-- 按钮权限 Drawer -->
+    <el-drawer
+      v-model="actionDrawerVisible"
+      :title="`按钮权限 — ${actionMenuTitle}`"
+      size="520px"
+      destroy-on-close
+    >
+      <div style="margin-bottom: 12px">
+        <el-button type="primary" size="small" :icon="Plus" @click="openActionCreate">新增按钮</el-button>
+      </div>
+      <el-table v-loading="actionLoading" :data="actionRows" border size="small">
+        <el-table-column prop="action_code" label="编码" width="120" />
+        <el-table-column prop="action_name" label="名称" />
+        <el-table-column prop="sort_no" label="排序" width="60" align="center" />
+        <el-table-column label="状态" width="70" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.action_status === 1 ? 'success' : 'danger'" size="small">
+              {{ row.action_status === 1 ? '启用' : '禁用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="100" align="center">
+          <template #default="{ row }">
+            <el-button type="primary" link size="small" :icon="EditPen" @click="openActionEdit(row)" />
+            <el-button type="danger" link size="small" :icon="Delete" @click="handleActionDelete(row)" />
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-drawer>
+
+    <!-- 按钮新增/编辑 Dialog -->
+    <el-dialog
+      v-model="actionFormVisible"
+      :title="editingActionId ? '编辑按钮' : '新增按钮'"
+      width="420px"
+      append-to-body
+      destroy-on-close
+    >
+      <el-form :model="actionForm" label-width="80px">
+        <el-form-item label="按钮编码" required>
+          <el-input v-model="actionForm.action_code" placeholder="如 add / edit / delete" />
+        </el-form-item>
+        <el-form-item label="按钮名称" required>
+          <el-input v-model="actionForm.action_name" placeholder="如 新增 / 编辑 / 删除" />
+        </el-form-item>
+        <el-form-item label="说明">
+          <el-input v-model="actionForm.action_desc" placeholder="可选" />
+        </el-form-item>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="排序号">
+              <el-input-number v-model="actionForm.sort_no" :min="0" :max="9999" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="状态">
+              <el-select v-model="actionForm.action_status" style="width: 100%">
+                <el-option :value="1" label="启用" />
+                <el-option :value="2" label="禁用" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <template #footer>
+        <el-button @click="actionFormVisible = false">取消</el-button>
+        <el-button type="primary" :loading="actionSubmitting" @click="handleActionSubmit">保存</el-button>
       </template>
     </el-dialog>
   </div>

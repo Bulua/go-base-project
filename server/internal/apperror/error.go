@@ -61,6 +61,10 @@ var registry = []struct {
 	{menumodel.ErrParamNotFound, Definition{Code: 404403, Status: http.StatusNotFound, Message: "路由参数不存在"}},
 	{menumodel.ErrParamKeyEmpty, Definition{Code: 400405, Status: http.StatusBadRequest, Message: "参数键名不能为空"}},
 	{menumodel.ErrParamModeBad, Definition{Code: 400406, Status: http.StatusBadRequest, Message: "参数模式必须为 query 或 path"}},
+	{menumodel.ErrActionNotFound, Definition{Code: 404404, Status: http.StatusNotFound, Message: "按钮权限不存在"}},
+	{menumodel.ErrActionCodeEmpty, Definition{Code: 400407, Status: http.StatusBadRequest, Message: "按钮编码不能为空"}},
+	{menumodel.ErrActionNameEmpty, Definition{Code: 400408, Status: http.StatusBadRequest, Message: "按钮名称不能为空"}},
+	{menumodel.ErrActionCodeTaken, Definition{Code: 409402, Status: http.StatusConflict, Message: "该菜单下按钮编码已存在"}},
 }
 
 func Write(w http.ResponseWriter, r *http.Request, err error) {

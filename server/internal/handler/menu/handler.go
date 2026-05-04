@@ -32,6 +32,8 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	// specific sub-paths before /{id}
 	mux.HandleFunc("GET /api/v1/menus/tree", h.withAuth(h.tree))
 	mux.HandleFunc("DELETE /api/v1/menus/params/{paramId}", h.withAuth(h.deleteParam))
+	mux.HandleFunc("PUT /api/v1/menu-actions/{id}", h.withAuth(h.updateAction))
+	mux.HandleFunc("DELETE /api/v1/menu-actions/{id}", h.withAuth(h.deleteAction))
 	mux.HandleFunc("GET /api/v1/menus", h.withAuth(h.list))
 	mux.HandleFunc("POST /api/v1/menus", h.withAuth(h.create))
 	mux.HandleFunc("GET /api/v1/menus/{id}", h.withAuth(h.get))
@@ -39,6 +41,8 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /api/v1/menus/{id}", h.withAuth(h.delete))
 	mux.HandleFunc("GET /api/v1/menus/{id}/params", h.withAuth(h.listParams))
 	mux.HandleFunc("POST /api/v1/menus/{id}/params", h.withAuth(h.createParam))
+	mux.HandleFunc("GET /api/v1/menus/{id}/actions", h.withAuth(h.listActions))
+	mux.HandleFunc("POST /api/v1/menus/{id}/actions", h.withAuth(h.createAction))
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
@@ -183,6 +187,73 @@ func (h *Handler) deleteParam(w http.ResponseWriter, r *http.Request, _ menumode
 		return
 	}
 	if err := h.service.DeleteParam(r.Context(), paramID); err != nil {
+		apperror.Write(w, r, err)
+		return
+	}
+	response.OK(w, r, map[string]bool{"success": true})
+}
+
+func (h *Handler) listActions(w http.ResponseWriter, r *http.Request, _ menumodel.ActorContext) {
+	id, ok := parseIDFromPath(w, r, "id")
+	if !ok {
+		return
+	}
+	actions, err := h.service.ListActions(r.Context(), id)
+	if err != nil {
+		apperror.Write(w, r, err)
+		return
+	}
+	response.OK(w, r, actions)
+}
+
+func (h *Handler) createAction(w http.ResponseWriter, r *http.Request, _ menumodel.ActorContext) {
+	id, ok := parseIDFromPath(w, r, "id")
+	if !ok {
+		return
+	}
+	var req menumodel.SaveActionRequest
+	if err := response.ReadJSON(r, &req); err != nil {
+		apperror.WriteDefinition(w, r, apperror.InvalidRequestBody)
+		return
+	}
+	if req.ActionStatus == 0 {
+		req.ActionStatus = menumodel.StatusActive
+	}
+	action, err := h.service.CreateAction(r.Context(), id, req)
+	if err != nil {
+		apperror.Write(w, r, err)
+		return
+	}
+	response.OK(w, r, action)
+}
+
+func (h *Handler) updateAction(w http.ResponseWriter, r *http.Request, _ menumodel.ActorContext) {
+	id, ok := parseIDFromPath(w, r, "id")
+	if !ok {
+		return
+	}
+	var req menumodel.SaveActionRequest
+	if err := response.ReadJSON(r, &req); err != nil {
+		apperror.WriteDefinition(w, r, apperror.InvalidRequestBody)
+		return
+	}
+	if req.ActionStatus == 0 {
+		req.ActionStatus = menumodel.StatusActive
+	}
+	action, err := h.service.UpdateAction(r.Context(), id, req)
+	if err != nil {
+		apperror.Write(w, r, err)
+		return
+	}
+	response.OK(w, r, action)
+}
+
+func (h *Handler) deleteAction(w http.ResponseWriter, r *http.Request, _ menumodel.ActorContext) {
+	id, ok := parseIDFromPath(w, r, "id")
+	if !ok {
+		return
+	}
+	if err := h.service.DeleteAction(r.Context(), id); err != nil {
 		apperror.Write(w, r, err)
 		return
 	}

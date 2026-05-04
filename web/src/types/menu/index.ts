@@ -70,3 +70,23 @@ export interface CreateParamPayload {
   param_key: string
   param_value?: string | null
 }
+
+export interface MenuAction {
+  id: number
+  menu_id: number
+  action_code: string
+  action_name: string
+  action_desc?: string | null
+  sort_no: number
+  action_status: number
+  created_at: string
+  updated_at: string
+}
+
+export interface SaveActionPayload {
+  action_code: string
+  action_name: string
+  action_desc?: string | null
+  sort_no: number
+  action_status: number
+}

@@ -25,6 +25,10 @@ var (
 	ErrParamNotFound      = errors.New("route param not found")
 	ErrParamKeyEmpty      = errors.New("param key is required")
 	ErrParamModeBad       = errors.New("param mode must be query or path")
+	ErrActionNotFound     = errors.New("action not found")
+	ErrActionCodeEmpty    = errors.New("action code is required")
+	ErrActionNameEmpty    = errors.New("action name is required")
+	ErrActionCodeTaken    = errors.New("action code already exists for this menu")
 )
 
 type Menu struct {
@@ -98,6 +102,26 @@ type CreateParamRequest struct {
 	ParamMode  string  `json:"param_mode"`
 	ParamKey   string  `json:"param_key"`
 	ParamValue *string `json:"param_value,omitempty"`
+}
+
+type MenuAction struct {
+	ID           uint64    `json:"id"`
+	MenuID       uint64    `json:"menu_id"`
+	ActionCode   string    `json:"action_code"`
+	ActionName   string    `json:"action_name"`
+	ActionDesc   *string   `json:"action_desc,omitempty"`
+	SortNo       int       `json:"sort_no"`
+	ActionStatus int       `json:"action_status"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+type SaveActionRequest struct {
+	ActionCode   string  `json:"action_code"`
+	ActionName   string  `json:"action_name"`
+	ActionDesc   *string `json:"action_desc,omitempty"`
+	SortNo       int     `json:"sort_no"`
+	ActionStatus int     `json:"action_status"`
 }
 
 type ActorContext struct {

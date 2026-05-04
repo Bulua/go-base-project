@@ -34,6 +34,12 @@ export const useAuthStore = defineStore('auth', () => {
     currentUser.value?.roles?.map((role) => role.role_name).join(' / ') || '未分配角色',
   )
   const flatMenus = computed(() => flattenMenus(menuRoutes.value))
+  // actionCodes: Set of action_code for quick loose check (e.g. 'add')
+  const actionCodes = computed(() => new Set(actions.value.map((a) => a.action_code)))
+  // actionKeys: Set of "menuId:actionCode" for precise check (e.g. '11:add')
+  const actionKeys = computed(
+    () => new Set(actions.value.map((a) => `${a.menu_id}:${a.action_code}`)),
+  )
 
   async function loginWithPassword(loginName: string, password: string) {
     loginLoading.value = true
@@ -105,6 +111,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     actions,
+    actionCodes,
+    actionKeys,
     currentUser,
     flatMenus,
     isAuthenticated,

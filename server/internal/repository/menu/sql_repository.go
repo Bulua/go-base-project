@@ -219,6 +219,94 @@ VALUES (?, ?, ?, ?)`,
 	return uint64(id), err
 }
 
+// ── Menu Actions ─────────────────────────────────────────────────────────────
+
+func (r *SQLRepository) ListActions(ctx context.Context, menuID uint64) ([]menumodel.MenuAction, error) {
+	rows, err := r.db.QueryContext(ctx, `
+SELECT id, menu_id, action_code, action_name, action_desc, sort_no, action_status, created_at, updated_at
+FROM gbp_menu_actions
+WHERE menu_id = ? AND deleted_at IS NULL
+ORDER BY sort_no ASC, id ASC`, menuID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanActionRows(rows)
+}
+
+func (r *SQLRepository) GetActionByID(ctx context.Context, id uint64) (*menumodel.MenuAction, error) {
+	row := r.db.QueryRowContext(ctx, `
+SELECT id, menu_id, action_code, action_name, action_desc, sort_no, action_status, created_at, updated_at
+FROM gbp_menu_actions WHERE id = ? AND deleted_at IS NULL`, id)
+	a, err := scanActionRow(row)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, menumodel.ErrActionNotFound
+		}
+		return nil, err
+	}
+	return &a, nil
+}
+
+func (r *SQLRepository) CountActionByCode(ctx context.Context, menuID uint64, code string, excludeID uint64) (int64, error) {
+	var count int64
+	err := r.db.QueryRowContext(ctx, `
+SELECT COUNT(1) FROM gbp_menu_actions
+WHERE menu_id = ? AND action_code = ? AND deleted_at IS NULL AND id != ?`,
+		menuID, code, excludeID).Scan(&count)
+	return count, err
+}
+
+func (r *SQLRepository) CreateAction(ctx context.Context, menuID uint64, req menumodel.SaveActionRequest) (uint64, error) {
+	res, err := r.db.ExecContext(ctx, `
+INSERT INTO gbp_menu_actions (menu_id, action_code, action_name, action_desc, sort_no, action_status)
+VALUES (?, ?, ?, ?, ?, ?)`,
+		menuID, req.ActionCode, req.ActionName, nullStr(req.ActionDesc), req.SortNo, req.ActionStatus)
+	if err != nil {
+		return 0, err
+	}
+	id, err := res.LastInsertId()
+	return uint64(id), err
+}
+
+func (r *SQLRepository) UpdateAction(ctx context.Context, id uint64, req menumodel.SaveActionRequest) error {
+	res, err := r.db.ExecContext(ctx, `
+UPDATE gbp_menu_actions
+SET action_code = ?, action_name = ?, action_desc = ?, sort_no = ?, action_status = ?
+WHERE id = ? AND deleted_at IS NULL`,
+		req.ActionCode, req.ActionName, nullStr(req.ActionDesc), req.SortNo, req.ActionStatus, id)
+	if err != nil {
+		return err
+	}
+	if affected, _ := res.RowsAffected(); affected == 0 {
+		return menumodel.ErrActionNotFound
+	}
+	return nil
+}
+
+func (r *SQLRepository) DeleteAction(ctx context.Context, id uint64) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	res, err := tx.ExecContext(ctx,
+		"UPDATE gbp_menu_actions SET deleted_at = NOW(3) WHERE id = ? AND deleted_at IS NULL", id)
+	if err != nil {
+		return err
+	}
+	if affected, _ := res.RowsAffected(); affected == 0 {
+		return menumodel.ErrActionNotFound
+	}
+	// cascade: remove role assignments for this action
+	if _, err := tx.ExecContext(ctx,
+		"DELETE FROM gbp_role_actions WHERE action_id = ?", id); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 func (r *SQLRepository) AssignToRole(ctx context.Context, roleID, menuID uint64) error {
 	_, err := r.db.ExecContext(ctx,
 		"INSERT IGNORE INTO gbp_role_menus (role_id, menu_id) VALUES (?, ?)", roleID, menuID)
@@ -305,6 +393,32 @@ func strPtr(ns sql.NullString) *string {
 		return nil
 	}
 	return &ns.String
+}
+
+func scanActionRow(row rowScanner) (menumodel.MenuAction, error) {
+	var a menumodel.MenuAction
+	var desc sql.NullString
+	err := row.Scan(&a.ID, &a.MenuID, &a.ActionCode, &a.ActionName, &desc,
+		&a.SortNo, &a.ActionStatus, &a.CreatedAt, &a.UpdatedAt)
+	if err != nil {
+		return a, err
+	}
+	if desc.Valid {
+		a.ActionDesc = &desc.String
+	}
+	return a, nil
+}
+
+func scanActionRows(rows *sql.Rows) ([]menumodel.MenuAction, error) {
+	actions := []menumodel.MenuAction{}
+	for rows.Next() {
+		a, err := scanActionRow(rows)
+		if err != nil {
+			return nil, err
+		}
+		actions = append(actions, a)
+	}
+	return actions, rows.Err()
 }
 
 func nullStr(v *string) interface{} {
