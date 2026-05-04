@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	authmodel "gobaseproject/server/internal/model/auth"
+	dictmodel "gobaseproject/server/internal/model/dict"
 	menumodel "gobaseproject/server/internal/model/menu"
 	rolemodel "gobaseproject/server/internal/model/role"
 	usermodel "gobaseproject/server/internal/model/user"
@@ -19,9 +20,11 @@ type Definition struct {
 
 var (
 	InvalidRequestBody  = Definition{Code: 400001, Status: http.StatusBadRequest, Message: "请求参数格式不正确"}
+	InvalidParams       = Definition{Code: 400002, Status: http.StatusBadRequest, Message: "请求参数不正确"}
 	InvalidUserID       = Definition{Code: 400201, Status: http.StatusBadRequest, Message: "用户ID不正确"}
 	InvalidRoleID       = Definition{Code: 400301, Status: http.StatusBadRequest, Message: "角色ID不正确"}
 	InvalidMenuID       = Definition{Code: 400401, Status: http.StatusBadRequest, Message: "菜单ID不正确"}
+	NotFound            = Definition{Code: 404001, Status: http.StatusNotFound, Message: "资源不存在"}
 	MissingAuthToken    = Definition{Code: 401001, Status: http.StatusUnauthorized, Message: "缺少登录凭证"}
 	InvalidAuthToken    = Definition{Code: 401002, Status: http.StatusUnauthorized, Message: "登录状态已失效，请重新登录"}
 	MissingRefreshToken = Definition{Code: 401003, Status: http.StatusUnauthorized, Message: "缺少刷新凭证"}
@@ -66,6 +69,14 @@ var registry = []struct {
 	{menumodel.ErrActionCodeEmpty, Definition{Code: 400407, Status: http.StatusBadRequest, Message: "按钮编码不能为空"}},
 	{menumodel.ErrActionNameEmpty, Definition{Code: 400408, Status: http.StatusBadRequest, Message: "按钮名称不能为空"}},
 	{menumodel.ErrActionCodeTaken, Definition{Code: 409402, Status: http.StatusConflict, Message: "该菜单下按钮编码已存在"}},
+	{dictmodel.ErrDictNotFound, Definition{Code: 404501, Status: http.StatusNotFound, Message: "字典不存在"}},
+	{dictmodel.ErrDictCodeTaken, Definition{Code: 409501, Status: http.StatusConflict, Message: "字典编码已存在"}},
+	{dictmodel.ErrDictCodeEmpty, Definition{Code: 400501, Status: http.StatusBadRequest, Message: "字典编码不能为空"}},
+	{dictmodel.ErrDictNameEmpty, Definition{Code: 400502, Status: http.StatusBadRequest, Message: "字典名称不能为空"}},
+	{dictmodel.ErrItemNotFound, Definition{Code: 404502, Status: http.StatusNotFound, Message: "字典项不存在"}},
+	{dictmodel.ErrItemValueTaken, Definition{Code: 409502, Status: http.StatusConflict, Message: "该字典下字典项值已存在"}},
+	{dictmodel.ErrItemLabelEmpty, Definition{Code: 400503, Status: http.StatusBadRequest, Message: "字典项标签不能为空"}},
+	{dictmodel.ErrItemValueEmpty, Definition{Code: 400504, Status: http.StatusBadRequest, Message: "字典项值不能为空"}},
 }
 
 func Write(w http.ResponseWriter, r *http.Request, err error) {

@@ -62,12 +62,43 @@ func Permission(db *sql.DB, tokens jwtParser) func(http.Handler) http.Handler {
 }
 
 func isSkipped(ctx context.Context, db *sql.DB, method, path string) bool {
-	var n int
-	err := db.QueryRowContext(ctx,
-		`SELECT COUNT(1) FROM gbp_api_skip_rules WHERE api_method = ? AND api_path = ? AND deleted_at IS NULL`,
-		method, path,
-	).Scan(&n)
-	return err == nil && n > 0
+	rows, err := db.QueryContext(ctx,
+		`SELECT api_path FROM gbp_api_skip_rules WHERE api_method = ? AND deleted_at IS NULL`,
+		method,
+	)
+	if err != nil {
+		return false
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var pattern string
+		if rows.Scan(&pattern) != nil {
+			continue
+		}
+		if pattern == path || matchPathPattern(pattern, path) {
+			return true
+		}
+	}
+	return false
+}
+
+// matchPathPattern checks whether path matches a pattern that may contain
+// {placeholder} segments (e.g. /api/v1/dictionaries/{dictCode}/items).
+func matchPathPattern(pattern, path string) bool {
+	ps := strings.Split(pattern, "/")
+	ss := strings.Split(path, "/")
+	if len(ps) != len(ss) {
+		return false
+	}
+	for i := range ps {
+		if strings.HasPrefix(ps[i], "{") && strings.HasSuffix(ps[i], "}") {
+			continue
+		}
+		if ps[i] != ss[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func hasPermission(ctx context.Context, db *sql.DB, roleIDs []uint64, resourceKey string) bool {

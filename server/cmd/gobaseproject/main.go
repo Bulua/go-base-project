@@ -7,7 +7,9 @@ import (
 	"os"
 	"time"
 
+	audithandler "gobaseproject/server/internal/handler/audit"
 	authhandler "gobaseproject/server/internal/handler/auth"
+	dicthandler "gobaseproject/server/internal/handler/dict"
 	menuhandler "gobaseproject/server/internal/handler/menu"
 	rolehandler "gobaseproject/server/internal/handler/role"
 	userhandler "gobaseproject/server/internal/handler/user"
@@ -15,10 +17,13 @@ import (
 	"gobaseproject/server/internal/middleware"
 	auditrepo "gobaseproject/server/internal/repository/audit"
 	authrepo "gobaseproject/server/internal/repository/auth"
+	dictrepo "gobaseproject/server/internal/repository/dict"
 	menurepo "gobaseproject/server/internal/repository/menu"
 	rolerepo "gobaseproject/server/internal/repository/role"
 	userrepo "gobaseproject/server/internal/repository/user"
+	auditservice "gobaseproject/server/internal/service/audit"
 	authservice "gobaseproject/server/internal/service/auth"
+	dictservice "gobaseproject/server/internal/service/dict"
 	menuservice "gobaseproject/server/internal/service/menu"
 	roleservice "gobaseproject/server/internal/service/role"
 	userservice "gobaseproject/server/internal/service/user"
@@ -54,9 +59,11 @@ func main() {
 	authService := authservice.NewService(authrepo.NewSQLRepository(db), tokenManager)
 
 	auditRepository := auditrepo.NewSQLRepository(db)
+	auditSvc := auditservice.NewService(auditRepository)
 	userService := userservice.NewService(userrepo.NewSQLRepository(db), auditRepository)
 	roleService := roleservice.NewService(rolerepo.NewSQLRepository(db), auditRepository)
 	menuService := menuservice.NewService(menurepo.NewSQLRepository(db))
+	dictService := dictservice.NewService(dictrepo.NewSQLRepository(db))
 
 	mux := http.NewServeMux()
 	registerSystemRoutes(mux, cfg)
@@ -64,10 +71,16 @@ func main() {
 	userhandler.NewHandler(userService, authService).RegisterRoutes(mux)
 	rolehandler.NewHandler(roleService, authService).RegisterRoutes(mux)
 	menuhandler.NewHandler(menuService, authService, cfg.CodeGen.WebSrcRoot).RegisterRoutes(mux)
+	dicthandler.NewHandler(dictService, authService).RegisterRoutes(mux)
+	audithandler.NewHandler(auditSvc).RegisterRoutes(mux)
 
 	server := &http.Server{
-		Addr:              ":" + cfg.App.Port,
-		Handler:           withCORS(middleware.Permission(db, tokenManager)(mux)),
+		Addr: ":" + cfg.App.Port,
+		Handler: withCORS(
+			middleware.Permission(db, tokenManager)(
+				middleware.OperationLog(auditRepository, tokenManager)(mux),
+			),
+		),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

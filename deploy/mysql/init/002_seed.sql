@@ -26,7 +26,7 @@ VALUES
   (12, 10, 2, 'role', 'systemRole', 'views/system/role/index.vue', NULL, '角色管理', 'Avatar', 2, 0, 0, 1),
   (13, 10, 2, 'menu', 'systemMenu', 'views/system/menu/index.vue', NULL, '菜单管理', 'Menu', 3, 0, 0, 1),
   (14, 10, 2, 'api', 'systemApi', 'views/system/api/index.vue', NULL, 'API管理', 'Link', 4, 0, 0, 1),
-  (15, 10, 2, 'dictionary', 'systemDictionary', 'views/system/dictionary/index.vue', NULL, '字典管理', 'Collection', 5, 0, 0, 1),
+  (15, 10, 2, 'dictionary', 'systemDictionary', 'views/system/dict/index.vue', NULL, '字典管理', 'Collection', 5, 0, 0, 1),
   (16, 10, 2, 'param', 'systemParam', 'views/system/param/index.vue', NULL, '系统参数', 'Tools', 6, 0, 0, 1),
   (20, 0, 1, '/audit', 'audit', 'layouts/default', '/audit/login-log', '审计日志', 'Document', 20, 0, 0, 1),
   (21, 20, 2, 'login-log', 'auditLoginLog', 'views/audit/login-log/index.vue', NULL, '登录日志', 'Tickets', 1, 0, 0, 1),
