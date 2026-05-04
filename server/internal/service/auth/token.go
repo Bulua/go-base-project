@@ -29,9 +29,10 @@ type TokenManager struct {
 }
 
 type Claims struct {
-	UserID    uint64 `json:"uid"`
-	LoginName string `json:"login_name"`
-	TokenType string `json:"typ"`
+	UserID    uint64   `json:"uid"`
+	LoginName string   `json:"login_name"`
+	TokenType string   `json:"typ"`
+	RoleIDs   []uint64 `json:"role_ids,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -58,7 +59,7 @@ func NewTokenManager(config TokenConfig) TokenManager {
 	}
 }
 
-func (m TokenManager) CreateToken(userID uint64, loginName string, tokenType string) (string, time.Time, error) {
+func (m TokenManager) CreateToken(userID uint64, loginName string, tokenType string, roleIDs []uint64) (string, time.Time, error) {
 	if len(m.secret) == 0 {
 		return "", time.Time{}, errors.New("jwt secret is required")
 	}
@@ -72,6 +73,7 @@ func (m TokenManager) CreateToken(userID uint64, loginName string, tokenType str
 		UserID:    userID,
 		LoginName: loginName,
 		TokenType: tokenType,
+		RoleIDs:   roleIDs,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    m.issuer,
 			Subject:   fmt.Sprintf("%d", userID),

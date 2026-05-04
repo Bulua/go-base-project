@@ -12,6 +12,7 @@ import (
 	rolehandler "gobaseproject/server/internal/handler/role"
 	userhandler "gobaseproject/server/internal/handler/user"
 	"gobaseproject/server/internal/infra/config"
+	"gobaseproject/server/internal/middleware"
 	auditrepo "gobaseproject/server/internal/repository/audit"
 	authrepo "gobaseproject/server/internal/repository/auth"
 	menurepo "gobaseproject/server/internal/repository/menu"
@@ -66,7 +67,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              ":" + cfg.App.Port,
-		Handler:           withCORS(mux),
+		Handler:           withCORS(middleware.Permission(db, tokenManager)(mux)),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

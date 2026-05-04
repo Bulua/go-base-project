@@ -82,11 +82,12 @@ func (s *Service) Login(ctx context.Context, req authmodel.LoginRequest, meta au
 		return authmodel.Session{}, err
 	}
 	user.Roles = roles
-	accessToken, expiresAt, err := s.tokens.CreateToken(user.ID, user.LoginName, authmodel.TokenTypeAccess)
+	roleIDs := extractRoleIDs(roles)
+	accessToken, expiresAt, err := s.tokens.CreateToken(user.ID, user.LoginName, authmodel.TokenTypeAccess, roleIDs)
 	if err != nil {
 		return authmodel.Session{}, err
 	}
-	refreshToken, refreshExpiresAt, err := s.tokens.CreateToken(user.ID, user.LoginName, authmodel.TokenTypeRefresh)
+	refreshToken, refreshExpiresAt, err := s.tokens.CreateToken(user.ID, user.LoginName, authmodel.TokenTypeRefresh, roleIDs)
 	if err != nil {
 		return authmodel.Session{}, err
 	}
@@ -147,11 +148,12 @@ func (s *Service) Refresh(ctx context.Context, refreshToken string) (authmodel.S
 		return authmodel.Session{}, err
 	}
 	user.Roles = roles
-	accessToken, expiresAt, err := s.tokens.CreateToken(user.ID, user.LoginName, authmodel.TokenTypeAccess)
+	roleIDs := extractRoleIDs(roles)
+	accessToken, expiresAt, err := s.tokens.CreateToken(user.ID, user.LoginName, authmodel.TokenTypeAccess, roleIDs)
 	if err != nil {
 		return authmodel.Session{}, err
 	}
-	nextRefreshToken, refreshExpiresAt, err := s.tokens.CreateToken(user.ID, user.LoginName, authmodel.TokenTypeRefresh)
+	nextRefreshToken, refreshExpiresAt, err := s.tokens.CreateToken(user.ID, user.LoginName, authmodel.TokenTypeRefresh, roleIDs)
 	if err != nil {
 		return authmodel.Session{}, err
 	}
@@ -191,6 +193,14 @@ func (s *Service) Routes(ctx context.Context, userID uint64) ([]authmodel.Menu, 
 
 func (s *Service) Actions(ctx context.Context, userID uint64) ([]authmodel.Action, error) {
 	return s.repo.ListActionsByUserID(ctx, userID)
+}
+
+func extractRoleIDs(roles []authmodel.Role) []uint64 {
+	ids := make([]uint64, len(roles))
+	for i, r := range roles {
+		ids[i] = r.ID
+	}
+	return ids
 }
 
 func BuildMenuTree(menus []authmodel.Menu) []authmodel.Menu {

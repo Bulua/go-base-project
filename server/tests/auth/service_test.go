@@ -120,7 +120,7 @@ func TestServiceLogoutBlocksPresentedToken(t *testing.T) {
 	})
 	service := authservice.NewService(repo, manager)
 
-	token, expiresAt, err := manager.CreateToken(1, "admin", authmodel.TokenTypeAccess)
+	token, expiresAt, err := manager.CreateToken(1, "admin", authmodel.TokenTypeAccess, nil)
 	if err != nil {
 		t.Fatalf("create token: %v", err)
 	}

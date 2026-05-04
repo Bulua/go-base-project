@@ -25,6 +25,7 @@ var (
 	MissingAuthToken    = Definition{Code: 401001, Status: http.StatusUnauthorized, Message: "缺少登录凭证"}
 	InvalidAuthToken    = Definition{Code: 401002, Status: http.StatusUnauthorized, Message: "登录状态已失效，请重新登录"}
 	MissingRefreshToken = Definition{Code: 401003, Status: http.StatusUnauthorized, Message: "缺少刷新凭证"}
+	Forbidden           = Definition{Code: 403001, Status: http.StatusForbidden, Message: "无权执行该操作"}
 	MethodNotAllowed    = Definition{Code: 405001, Status: http.StatusMethodNotAllowed, Message: "请求方法不允许"}
 	Internal            = Definition{Code: 500001, Status: http.StatusInternalServerError, Message: "系统繁忙，请稍后重试"}
 )

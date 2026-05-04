@@ -367,6 +367,54 @@ function formatErr(e: unknown): string {
   return e instanceof Error ? e.message : String(e)
 }
 
+// ── API 分组全选 ─────────────────────────────────────────────────────
+function isApiGroupAllSelected(g: (typeof apisGrouped.value)[0]): boolean {
+  return g.list.length > 0 && g.list.every((api) => selectedApiIDs.value.includes(api.id))
+}
+function isApiGroupIndeterminate(g: (typeof apisGrouped.value)[0]): boolean {
+  const n = g.list.filter((api) => selectedApiIDs.value.includes(api.id)).length
+  return n > 0 && n < g.list.length
+}
+function toggleApiGroup(g: (typeof apisGrouped.value)[0], checked: boolean) {
+  const ids = g.list.map((api) => api.id)
+  if (checked) {
+    selectedApiIDs.value = [...new Set([...selectedApiIDs.value, ...ids])]
+  } else {
+    const set = new Set(ids)
+    selectedApiIDs.value = selectedApiIDs.value.filter((id) => !set.has(id))
+  }
+}
+function selectAllApis() {
+  selectedApiIDs.value = resources.value.apis.map((api) => api.id)
+}
+function clearAllApis() {
+  selectedApiIDs.value = []
+}
+
+// ── 按钮权限分组全选 ──────────────────────────────────────────────────
+function isActionGroupAllSelected(g: (typeof actionsGrouped.value)[0]): boolean {
+  return g.list.length > 0 && g.list.every((a) => selectedActionIDs.value.includes(a.id))
+}
+function isActionGroupIndeterminate(g: (typeof actionsGrouped.value)[0]): boolean {
+  const n = g.list.filter((a) => selectedActionIDs.value.includes(a.id)).length
+  return n > 0 && n < g.list.length
+}
+function toggleActionGroup(g: (typeof actionsGrouped.value)[0], checked: boolean) {
+  const ids = g.list.map((a) => a.id)
+  if (checked) {
+    selectedActionIDs.value = [...new Set([...selectedActionIDs.value, ...ids])]
+  } else {
+    const set = new Set(ids)
+    selectedActionIDs.value = selectedActionIDs.value.filter((id) => !set.has(id))
+  }
+}
+function selectAllActions() {
+  selectedActionIDs.value = resources.value.actions.map((a) => a.id)
+}
+function clearAllActions() {
+  selectedActionIDs.value = []
+}
+
 // ── Misc ────────────────────────────────────────────────────────────
 function parentName(parentRoleID: number): string {
   if (!parentRoleID) return '—'
@@ -570,14 +618,26 @@ function methodTagType(method: string) {
 
           <el-tab-pane label="按钮权限" name="actions">
             <div class="perms-pane">
+              <div v-if="actionsGrouped.length" class="perms-toolbar">
+                <el-button size="small" @click="selectAllActions">全选</el-button>
+                <el-button size="small" @click="clearAllActions">清空</el-button>
+              </div>
               <el-empty
                 v-if="!actionsGrouped.length"
                 description="暂无按钮"
                 :image-size="80"
               />
               <div v-for="g in actionsGrouped" :key="g.menuID" class="perms-group">
-                <h4>{{ g.menuTitle }}</h4>
-                <el-checkbox-group v-model="selectedActionIDs">
+                <div class="group-header">
+                  <el-checkbox
+                    :model-value="isActionGroupAllSelected(g)"
+                    :indeterminate="isActionGroupIndeterminate(g)"
+                    @change="(v: boolean) => toggleActionGroup(g, v)"
+                  >
+                    <span class="group-title">{{ g.menuTitle }}</span>
+                  </el-checkbox>
+                </div>
+                <el-checkbox-group v-model="selectedActionIDs" class="group-items">
                   <el-checkbox v-for="a in g.list" :key="a.id" :value="a.id">
                     {{ a.action_name }}
                     <span class="action-code">({{ a.action_code }})</span>
@@ -589,10 +649,22 @@ function methodTagType(method: string) {
 
           <el-tab-pane label="API 权限" name="apis">
             <div class="perms-pane">
+              <div v-if="apisGrouped.length" class="perms-toolbar">
+                <el-button size="small" @click="selectAllApis">全选</el-button>
+                <el-button size="small" @click="clearAllApis">清空</el-button>
+              </div>
               <el-empty v-if="!apisGrouped.length" description="暂无 API" :image-size="80" />
               <div v-for="g in apisGrouped" :key="g.group" class="perms-group">
-                <h4>{{ g.group }}</h4>
-                <el-checkbox-group v-model="selectedApiIDs">
+                <div class="group-header">
+                  <el-checkbox
+                    :model-value="isApiGroupAllSelected(g)"
+                    :indeterminate="isApiGroupIndeterminate(g)"
+                    @change="(v: boolean) => toggleApiGroup(g, v)"
+                  >
+                    <span class="group-title">{{ g.group }}</span>
+                  </el-checkbox>
+                </div>
+                <el-checkbox-group v-model="selectedApiIDs" class="group-items">
                   <el-checkbox v-for="api in g.list" :key="api.id" :value="api.id">
                     <el-tag size="small" class="method-tag" :type="methodTagType(api.api_method)">
                       {{ api.api_method }}
@@ -675,15 +747,30 @@ function methodTagType(method: string) {
   padding: 4px 8px;
 }
 
+.perms-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
 .perms-group {
   margin-bottom: 18px;
 }
 
-.perms-group h4 {
+.group-header {
+  margin-bottom: 8px;
+}
+
+.group-header :deep(.el-checkbox__label) {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 8px;
+}
+
+.group-items {
+  padding-left: 24px;
 }
 
 .perms-group :deep(.el-checkbox-group) {
