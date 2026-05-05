@@ -45,7 +45,7 @@ const resources = ref<RoleResources>({ menus: [], actions: [], apis: [], roles: 
 
 const filters = reactive<RoleListQuery>({
   page: 1,
-  page_size: 20,
+  page_size: 10,
   keyword: '',
   role_status: 0,
 })

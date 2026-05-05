@@ -22,7 +22,7 @@ const loading = ref(false)
 const items = ref<Dictionary[]>([])
 const total = ref(0)
 
-const filters = reactive<DictListQuery>({ page: 1, page_size: 20, keyword: '', dict_status: 0 })
+const filters = reactive<DictListQuery>({ page: 1, page_size: 10, keyword: '', dict_status: 0 })
 
 async function loadData() {
   loading.value = true

@@ -40,7 +40,7 @@ const roleOptions = ref<UserRole[]>([])
 
 const filters = reactive<UserListQuery>({
   page: 1,
-  page_size: 20,
+  page_size: 10,
   keyword: '',
   user_status: 0,
   role_id: 0,
