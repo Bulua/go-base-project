@@ -1,0 +1,19 @@
+# Full-local override: MySQL + Redis run as containers, server points to them.
+# Usage:
+#   docker compose -f docker-compose.yaml -f docker-compose.local.yaml up -d --build
+#
+# No profile flags needed. All services start together.
+
+services:
+  server:
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      REDIS_HOST: redis
+      REDIS_PORT_IN_CONTAINER: "6379"
+
+  mysql:
+    profiles: []   # override: always start (no --profile flag required)
+
+  redis:
+    profiles: []   # override: always start (no --profile flag required)
