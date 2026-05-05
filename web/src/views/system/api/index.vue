@@ -261,11 +261,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="page-container">
+  <div class="api-page">
     <el-tabs type="border-card">
       <!-- ── API 资源 ── -->
       <el-tab-pane label="API 资源">
-        <el-card shadow="never" class="filter-card">
+        <div class="filter-bar">
           <el-form inline @submit.prevent="handleAPISearch">
             <el-form-item label="关键词">
               <el-input v-model="apiFilters.keyword" placeholder="路径 / 描述" clearable style="width:180px" />
@@ -297,10 +297,10 @@ onMounted(() => {
               <el-button type="primary" :icon="Plus" @click="openCreateAPI">新增</el-button>
             </el-form-item>
           </el-form>
-        </el-card>
+        </div>
 
-        <el-card shadow="never" class="table-card">
-          <el-table v-loading="apiLoading" :data="apiItems" stripe>
+        <div class="table-area" v-loading="apiLoading">
+          <el-table :data="apiItems" stripe>
             <el-table-column prop="id" label="ID" width="70" />
             <el-table-column label="方法" width="90" align="center">
               <template #default="{ row }">
@@ -325,7 +325,7 @@ onMounted(() => {
             </el-table-column>
           </el-table>
 
-          <div class="pagination-wrapper">
+          <div class="pagination-row">
             <el-pagination
               v-model:current-page="apiFilters.page"
               v-model:page-size="apiFilters.page_size"
@@ -336,12 +336,12 @@ onMounted(() => {
               @size-change="() => { apiFilters.page = 1; loadAPIs() }"
             />
           </div>
-        </el-card>
+        </div>
       </el-tab-pane>
 
       <!-- ── 白名单 ── -->
       <el-tab-pane label="免鉴权白名单">
-        <el-card shadow="never" class="filter-card">
+        <div class="filter-bar">
           <el-form inline @submit.prevent="handleSkipSearch">
             <el-form-item label="关键词">
               <el-input v-model="skipFilters.keyword" placeholder="路径 / 原因" clearable style="width:200px" />
@@ -360,10 +360,10 @@ onMounted(() => {
               <el-button type="primary" :icon="Plus" @click="openCreateSkip">新增</el-button>
             </el-form-item>
           </el-form>
-        </el-card>
+        </div>
 
-        <el-card shadow="never" class="table-card">
-          <el-table v-loading="skipLoading" :data="skipItems" stripe>
+        <div class="table-area" v-loading="skipLoading">
+          <el-table :data="skipItems" stripe>
             <el-table-column prop="id" label="ID" width="70" />
             <el-table-column label="方法" width="90" align="center">
               <template #default="{ row }">
@@ -382,7 +382,7 @@ onMounted(() => {
             </el-table-column>
           </el-table>
 
-          <div class="pagination-wrapper">
+          <div class="pagination-row">
             <el-pagination
               v-model:current-page="skipFilters.page"
               v-model:page-size="skipFilters.page_size"
@@ -393,7 +393,7 @@ onMounted(() => {
               @size-change="() => { skipFilters.page = 1; loadSkipRules() }"
             />
           </div>
-        </el-card>
+        </div>
       </el-tab-pane>
     </el-tabs>
 
@@ -461,21 +461,33 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.page-container {
+.api-page {
   padding: 16px;
 }
-.filter-card {
+
+.filter-bar {
   margin-bottom: 12px;
 }
-.filter-card :deep(.el-card__body) {
-  padding-bottom: 0;
+
+.filter-bar :deep(.el-form) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 16px;
+  margin: 0;
 }
-.table-card {
+
+.filter-bar :deep(.el-form-item) {
+  margin: 0;
+}
+
+.table-area {
   margin-top: 0;
 }
-.pagination-wrapper {
+
+.pagination-row {
+  margin-top: 14px;
   display: flex;
   justify-content: flex-end;
-  margin-top: 16px;
 }
 </style>

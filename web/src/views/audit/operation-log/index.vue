@@ -133,9 +133,9 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="page-container">
+  <div class="operation-log-page">
     <!-- Filter bar -->
-    <el-card shadow="never" class="filter-card">
+    <section class="bp-placeholder filter-bar">
       <el-form inline @submit.prevent="handleSearch">
         <el-form-item label="关键词">
           <el-input
@@ -179,12 +179,11 @@ onMounted(load)
           <el-button type="danger" plain :icon="Delete" @click="handleCleanup">清理旧日志</el-button>
         </el-form-item>
       </el-form>
-    </el-card>
+    </section>
 
     <!-- Table card -->
-    <el-card shadow="never" class="table-card">
-
-      <el-table v-loading="loading" :data="items" border stripe>
+    <section class="bp-placeholder table-card" v-loading="loading">
+      <el-table :data="items" stripe>
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column label="方法" width="90" align="center">
           <template #default="{ row }">
@@ -193,7 +192,7 @@ onMounted(load)
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="request_path" label="路径" min-width="220" show-overflow-tooltip />
+        <el-table-column prop="request_path" label="路径" min-width="120" show-overflow-tooltip />
         <el-table-column label="状态码" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="statusTag(row.status_code)" size="small">
@@ -215,7 +214,7 @@ onMounted(load)
         </el-table-column>
       </el-table>
 
-      <div class="pagination-wrapper">
+      <div class="pagination-row">
         <el-pagination
           v-model:current-page="filters.page"
           v-model:page-size="filters.page_size"
@@ -226,7 +225,7 @@ onMounted(load)
           @size-change="handleSizeChange"
         />
       </div>
-    </el-card>
+    </section>
 
     <!-- Detail drawer -->
     <el-drawer
@@ -273,20 +272,34 @@ onMounted(load)
 </template>
 
 <style scoped>
-.page-container {
-  padding: 16px;
+.operation-log-page {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
-.filter-card :deep(.el-card__body) {
-  padding-bottom: 0;
+
+.filter-bar :deep(.el-form) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 16px;
+  margin: 0;
 }
-.pagination-wrapper {
+
+.filter-bar :deep(.el-form-item) {
+  margin: 0;
+}
+
+.table-card {
+  padding: 16px;
+}
+
+.pagination-row {
+  margin-top: 14px;
   display: flex;
   justify-content: flex-end;
-  margin-top: 16px;
 }
+
 .body-pre {
   background: #f5f7fa;
   border-radius: 4px;
