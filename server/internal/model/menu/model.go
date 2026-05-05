@@ -16,19 +16,16 @@ const (
 )
 
 var (
-	ErrMenuNotFound       = errors.New("menu not found")
-	ErrMenuTitleEmpty     = errors.New("menu title is required")
-	ErrInvalidStatus      = errors.New("invalid menu status")
-	ErrInvalidType        = errors.New("invalid menu type")
-	ErrParentNotFound     = errors.New("parent menu not found")
-	ErrHasChildren        = errors.New("menu still has children")
-	ErrParamNotFound      = errors.New("route param not found")
-	ErrParamKeyEmpty      = errors.New("param key is required")
-	ErrParamModeBad       = errors.New("param mode must be query or path")
-	ErrActionNotFound     = errors.New("action not found")
-	ErrActionCodeEmpty    = errors.New("action code is required")
-	ErrActionNameEmpty    = errors.New("action name is required")
-	ErrActionCodeTaken    = errors.New("action code already exists for this menu")
+	ErrMenuNotFound    = errors.New("menu not found")
+	ErrMenuTitleEmpty  = errors.New("menu title is required")
+	ErrInvalidStatus   = errors.New("invalid menu status")
+	ErrInvalidType     = errors.New("invalid menu type")
+	ErrParentNotFound  = errors.New("parent menu not found")
+	ErrHasChildren     = errors.New("menu still has children")
+	ErrActionNotFound  = errors.New("action not found")
+	ErrActionCodeEmpty = errors.New("action code is required")
+	ErrActionNameEmpty = errors.New("action name is required")
+	ErrActionCodeTaken = errors.New("action code already exists for this menu")
 )
 
 type Menu struct {
@@ -48,20 +45,10 @@ type Menu struct {
 	ActiveRoute    *string      `json:"active_route,omitempty"`
 	TransitionName *string      `json:"transition_name,omitempty"`
 	ExternalURL    *string      `json:"external_url,omitempty"`
-	MenuStatus     int          `json:"menu_status"`
-	Params         []RouteParam `json:"params,omitempty"`
-	Children       []Menu       `json:"children,omitempty"`
+	MenuStatus     int    `json:"menu_status"`
+	Children       []Menu `json:"children,omitempty"`
 	CreatedAt      time.Time    `json:"created_at"`
 	UpdatedAt      time.Time    `json:"updated_at"`
-}
-
-type RouteParam struct {
-	ID         uint64    `json:"id"`
-	MenuID     uint64    `json:"menu_id"`
-	ParamMode  string    `json:"param_mode"`
-	ParamKey   string    `json:"param_key"`
-	ParamValue *string   `json:"param_value,omitempty"`
-	CreatedAt  time.Time `json:"created_at"`
 }
 
 type ListQuery struct {
@@ -96,12 +83,6 @@ type SaveRequest struct {
 	TransitionName *string `json:"transition_name,omitempty"`
 	ExternalURL    *string `json:"external_url,omitempty"`
 	MenuStatus     int     `json:"menu_status"`
-}
-
-type CreateParamRequest struct {
-	ParamMode  string  `json:"param_mode"`
-	ParamKey   string  `json:"param_key"`
-	ParamValue *string `json:"param_value,omitempty"`
 }
 
 type MenuAction struct {

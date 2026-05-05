@@ -1,11 +1,9 @@
 import { request, unwrap } from '@/api/request'
 import type {
-  CreateParamPayload,
   MenuAction,
   MenuItem,
   MenuListQuery,
   MenuListResult,
-  RouteParam,
   SaveActionPayload,
   SaveMenuPayload,
 } from '@/types/menu'
@@ -47,18 +45,6 @@ export function updateMenu(id: number, payload: SaveMenuPayload): Promise<MenuIt
 
 export function deleteMenu(id: number): Promise<{ success: boolean }> {
   return unwrap<{ success: boolean }>(request.delete(`/api/v1/menus/${id}`))
-}
-
-export function listMenuParams(menuId: number): Promise<RouteParam[]> {
-  return unwrap<RouteParam[]>(request.get(`/api/v1/menus/${menuId}/params`))
-}
-
-export function createMenuParam(menuId: number, payload: CreateParamPayload): Promise<RouteParam> {
-  return unwrap<RouteParam>(request.post(`/api/v1/menus/${menuId}/params`, payload))
-}
-
-export function deleteMenuParam(paramId: number): Promise<{ success: boolean }> {
-  return unwrap<{ success: boolean }>(request.delete(`/api/v1/menus/params/${paramId}`))
 }
 
 export function listMenuActions(menuId: number): Promise<MenuAction[]> {

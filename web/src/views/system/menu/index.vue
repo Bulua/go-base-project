@@ -6,17 +6,15 @@ import IconPicker from '@/components/common/IconPicker.vue'
 import {
   type CreateMenuResult,
   createMenu,
-  createMenuParam,
   createMenuAction,
   deleteMenu,
-  deleteMenuParam,
   deleteMenuAction,
   getMenuTree,
   listMenuActions,
   updateMenu,
   updateMenuAction,
 } from '@/api/menu'
-import type { CreateParamPayload, MenuItem, MenuAction, RouteParam, SaveActionPayload, SaveMenuPayload } from '@/types/menu'
+import type { MenuItem, MenuAction, SaveActionPayload, SaveMenuPayload } from '@/types/menu'
 
 // ── 菜单类型 ───────────────────────────────────────────────────────────────
 const MENU_TYPES = [
@@ -100,7 +98,6 @@ function openCreate(parentId = 0) {
   editingId.value = null
   dialogTitle.value = parentId ? '新增子菜单' : '新增根菜单'
   dialogVisible.value = true
-  paramRows.value = []
 }
 
 function openEdit(row: MenuItem) {
@@ -125,7 +122,6 @@ function openEdit(row: MenuItem) {
   editingId.value = row.id
   dialogTitle.value = '编辑菜单'
   dialogVisible.value = true
-  paramRows.value = row.params ? [...row.params] : []
 }
 
 async function handleSubmit() {
@@ -152,43 +148,6 @@ async function handleSubmit() {
     ElMessage.error(e instanceof Error ? e.message : '保存失败')
   } finally {
     submitting.value = false
-  }
-}
-
-// ── 路由参数 ──────────────────────────────────────────────────────────────
-const paramRows = ref<RouteParam[]>([])
-const addingParam = ref(false)
-const newParam = reactive<CreateParamPayload>({ param_mode: 'query', param_key: '', param_value: '' })
-
-async function handleAddParam() {
-  if (!newParam.param_key.trim()) {
-    ElMessage.warning('请填写参数键名')
-    return
-  }
-  if (!editingId.value) return
-  addingParam.value = true
-  try {
-    const created = await createMenuParam(editingId.value, {
-      param_mode: newParam.param_mode,
-      param_key: newParam.param_key.trim(),
-      param_value: newParam.param_value || null,
-    })
-    paramRows.value.push(created)
-    newParam.param_key = ''
-    newParam.param_value = ''
-  } catch (e) {
-    ElMessage.error(e instanceof Error ? e.message : '添加失败')
-  } finally {
-    addingParam.value = false
-  }
-}
-
-async function handleDeleteParam(param: RouteParam) {
-  try {
-    await deleteMenuParam(param.id)
-    paramRows.value = paramRows.value.filter((p) => p.id !== param.id)
-  } catch (e) {
-    ElMessage.error(e instanceof Error ? e.message : '删除失败')
   }
 }
 
@@ -445,39 +404,6 @@ async function handleActionDelete(action: MenuAction) {
           </el-col>
         </el-row>
 
-        <!-- 路由参数（仅编辑时显示） -->
-        <template v-if="editingId">
-          <el-divider content-position="left">路由参数</el-divider>
-
-          <el-table :data="paramRows" size="small" style="margin-bottom: 8px">
-            <el-table-column prop="param_mode" label="模式" width="80" />
-            <el-table-column prop="param_key" label="键名" />
-            <el-table-column prop="param_value" label="默认值" />
-            <el-table-column label="" width="60" align="center">
-              <template #default="{ row }">
-                <el-button type="danger" link size="small" :icon="Delete" @click="handleDeleteParam(row)" />
-              </template>
-            </el-table-column>
-          </el-table>
-
-          <el-row :gutter="8" align="middle">
-            <el-col :span="6">
-              <el-select v-model="newParam.param_mode" size="small">
-                <el-option value="query" label="query" />
-                <el-option value="path" label="path" />
-              </el-select>
-            </el-col>
-            <el-col :span="8">
-              <el-input v-model="newParam.param_key" size="small" placeholder="键名" />
-            </el-col>
-            <el-col :span="7">
-              <el-input v-model="newParam.param_value" size="small" placeholder="默认值（可空）" />
-            </el-col>
-            <el-col :span="3">
-              <el-button size="small" :loading="addingParam" @click="handleAddParam">添加</el-button>
-            </el-col>
-          </el-row>
-        </template>
       </el-form>
 
       <template #footer>

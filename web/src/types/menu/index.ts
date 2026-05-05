@@ -16,19 +16,9 @@ export interface MenuItem {
   transition_name?: string | null
   external_url?: string | null
   menu_status: number
-  params?: RouteParam[]
   children?: MenuItem[]
   created_at: string
   updated_at: string
-}
-
-export interface RouteParam {
-  id: number
-  menu_id: number
-  param_mode: string
-  param_key: string
-  param_value?: string | null
-  created_at: string
 }
 
 export interface MenuListQuery {
@@ -63,12 +53,6 @@ export interface SaveMenuPayload {
   transition_name?: string | null
   external_url?: string | null
   menu_status: number
-}
-
-export interface CreateParamPayload {
-  param_mode: string
-  param_key: string
-  param_value?: string | null
 }
 
 export interface MenuAction {

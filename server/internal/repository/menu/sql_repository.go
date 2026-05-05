@@ -162,61 +162,13 @@ func (r *SQLRepository) SoftDelete(ctx context.Context, id uint64) error {
 		return menumodel.ErrMenuNotFound
 	}
 
-	// cascade: soft-delete route params and menu actions
-	if _, err := tx.ExecContext(ctx,
-		"UPDATE gbp_menu_route_params SET deleted_at = NOW(3) WHERE menu_id = ? AND deleted_at IS NULL", id); err != nil {
-		return err
-	}
+	// cascade: soft-delete menu actions
 	if _, err := tx.ExecContext(ctx,
 		"UPDATE gbp_menu_actions SET deleted_at = NOW(3) WHERE menu_id = ? AND deleted_at IS NULL", id); err != nil {
 		return err
 	}
 
 	return tx.Commit()
-}
-
-// ── Route Params ─────────────────────────────────────────────────────────────
-
-func (r *SQLRepository) ListParams(ctx context.Context, menuID uint64) ([]menumodel.RouteParam, error) {
-	rows, err := r.db.QueryContext(ctx, `
-SELECT id, menu_id, param_mode, param_key, param_value, created_at
-FROM gbp_menu_route_params
-WHERE menu_id = ? AND deleted_at IS NULL
-ORDER BY id ASC`, menuID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	params := []menumodel.RouteParam{}
-	for rows.Next() {
-		var p menumodel.RouteParam
-		var paramValue sql.NullString
-		if err := rows.Scan(&p.ID, &p.MenuID, &p.ParamMode, &p.ParamKey, &paramValue, &p.CreatedAt); err != nil {
-			return nil, err
-		}
-		if paramValue.Valid {
-			p.ParamValue = &paramValue.String
-		}
-		params = append(params, p)
-	}
-	return params, rows.Err()
-}
-
-func (r *SQLRepository) CreateParam(ctx context.Context, menuID uint64, req menumodel.CreateParamRequest) (uint64, error) {
-	res, err := r.db.ExecContext(ctx, `
-INSERT INTO gbp_menu_route_params (menu_id, param_mode, param_key, param_value)
-VALUES (?, ?, ?, ?)`,
-		menuID,
-		req.ParamMode,
-		req.ParamKey,
-		nullStr(req.ParamValue),
-	)
-	if err != nil {
-		return 0, err
-	}
-	id, err := res.LastInsertId()
-	return uint64(id), err
 }
 
 // ── Menu Actions ─────────────────────────────────────────────────────────────
@@ -311,18 +263,6 @@ func (r *SQLRepository) AssignToRole(ctx context.Context, roleID, menuID uint64)
 	_, err := r.db.ExecContext(ctx,
 		"INSERT IGNORE INTO gbp_role_menus (role_id, menu_id) VALUES (?, ?)", roleID, menuID)
 	return err
-}
-
-func (r *SQLRepository) DeleteParam(ctx context.Context, paramID uint64) error {
-	res, err := r.db.ExecContext(ctx,
-		"UPDATE gbp_menu_route_params SET deleted_at = NOW(3) WHERE id = ? AND deleted_at IS NULL", paramID)
-	if err != nil {
-		return err
-	}
-	if affected, _ := res.RowsAffected(); affected == 0 {
-		return menumodel.ErrParamNotFound
-	}
-	return nil
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────

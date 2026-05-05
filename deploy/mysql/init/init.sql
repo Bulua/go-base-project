@@ -26,7 +26,6 @@ DROP TABLE IF EXISTS `gbp_api_resources`;
 DROP TABLE IF EXISTS `gbp_role_actions`;
 DROP TABLE IF EXISTS `gbp_menu_actions`;
 DROP TABLE IF EXISTS `gbp_role_menus`;
-DROP TABLE IF EXISTS `gbp_menu_route_params`;
 DROP TABLE IF EXISTS `gbp_menus`;
 DROP TABLE IF EXISTS `gbp_jwt_blocklist`;
 DROP TABLE IF EXISTS `gbp_user_roles`;
@@ -126,20 +125,6 @@ CREATE TABLE `gbp_menus` (
   KEY `idx_gbp_menus_route_name` (`route_name`),
   KEY `idx_gbp_menus_deleted_at` (`deleted_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='menus';
-
-CREATE TABLE `gbp_menu_route_params` (
-  `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `created_at`  DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updated_at`  DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-  `deleted_at`  DATETIME(3)     NULL,
-  `menu_id`     BIGINT UNSIGNED NOT NULL,
-  `param_mode`  VARCHAR(32)     NOT NULL DEFAULT 'query',
-  `param_key`   VARCHAR(128)    NOT NULL,
-  `param_value` VARCHAR(255)    NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_gbp_menu_route_params_menu_id` (`menu_id`),
-  KEY `idx_gbp_menu_route_params_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='menu route params';
 
 CREATE TABLE `gbp_role_menus` (
   `role_id`    BIGINT UNSIGNED NOT NULL,
@@ -347,9 +332,8 @@ CREATE TABLE `gbp_files` (
 INSERT INTO `gbp_roles`
   (`id`, `role_code`, `role_name`, `parent_role_id`, `default_route`, `sort_no`, `role_status`, `remark`)
 VALUES
-  (1, 'super_admin',   '超级管理员', 0, 'dashboard', 1, 1, '系统内置最高权限角色'),
-  (2, 'system_admin',  '系统管理员', 1, 'dashboard', 2, 1, '负责用户、角色、菜单、权限等配置'),
-  (3, 'operator',      '运营人员',   2, 'dashboard', 3, 1, '普通运营人员角色');
+  (1, 'admin',   '超级管理员', 0, 'dashboard', 1, 1, '系统内置最高权限角色'),
+  (2, 'test',    '测试人员',   1, 'dashboard', 2, 1, '普通测试人员角色');
 
 -- 初始密码：Admin@123456
 INSERT INTO `gbp_users`

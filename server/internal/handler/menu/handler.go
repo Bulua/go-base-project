@@ -32,7 +32,6 @@ func NewHandler(service *menuservice.Service, tokens TokenParser, webSrcRoot str
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	// specific sub-paths before /{id}
 	mux.HandleFunc("GET /api/v1/menus/tree", h.withAuth(h.tree))
-	mux.HandleFunc("DELETE /api/v1/menus/params/{paramId}", h.withAuth(h.deleteParam))
 	mux.HandleFunc("PUT /api/v1/menu-actions/{id}", h.withAuth(h.updateAction))
 	mux.HandleFunc("DELETE /api/v1/menu-actions/{id}", h.withAuth(h.deleteAction))
 	mux.HandleFunc("GET /api/v1/menus", h.withAuth(h.list))
@@ -40,8 +39,6 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/menus/{id}", h.withAuth(h.get))
 	mux.HandleFunc("PUT /api/v1/menus/{id}", h.withAuth(h.update))
 	mux.HandleFunc("DELETE /api/v1/menus/{id}", h.withAuth(h.delete))
-	mux.HandleFunc("GET /api/v1/menus/{id}/params", h.withAuth(h.listParams))
-	mux.HandleFunc("POST /api/v1/menus/{id}/params", h.withAuth(h.createParam))
 	mux.HandleFunc("GET /api/v1/menus/{id}/actions", h.withAuth(h.listActions))
 	mux.HandleFunc("POST /api/v1/menus/{id}/actions", h.withAuth(h.createAction))
 
@@ -51,9 +48,6 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	routereg.Add("GET",    "/api/v1/menus/{id}",          "menu", "菜单详情")
 	routereg.Add("PUT",    "/api/v1/menus/{id}",          "menu", "修改菜单")
 	routereg.Add("DELETE", "/api/v1/menus/{id}",          "menu", "删除菜单")
-	routereg.Add("GET",    "/api/v1/menus/{id}/params",   "menu", "菜单路由参数")
-	routereg.Add("POST",   "/api/v1/menus/{id}/params",   "menu", "新增路由参数")
-	routereg.Add("DELETE", "/api/v1/menus/params/{id}",   "menu", "删除路由参数")
 	routereg.Add("GET",    "/api/v1/menus/{id}/actions",  "menu", "菜单按钮权限")
 	routereg.Add("POST",   "/api/v1/menus/{id}/actions",  "menu", "新增按钮权限")
 	routereg.Add("PUT",    "/api/v1/menu-actions/{id}",   "menu", "修改按钮权限")
@@ -159,49 +153,6 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request, _ menumodel.Act
 		return
 	}
 	if err := h.service.Delete(r.Context(), id); err != nil {
-		apperror.Write(w, r, err)
-		return
-	}
-	response.OK(w, r, map[string]bool{"success": true})
-}
-
-func (h *Handler) listParams(w http.ResponseWriter, r *http.Request, _ menumodel.ActorContext) {
-	id, ok := parseIDFromPath(w, r, "id")
-	if !ok {
-		return
-	}
-	params, err := h.service.ListParams(r.Context(), id)
-	if err != nil {
-		apperror.Write(w, r, err)
-		return
-	}
-	response.OK(w, r, params)
-}
-
-func (h *Handler) createParam(w http.ResponseWriter, r *http.Request, _ menumodel.ActorContext) {
-	id, ok := parseIDFromPath(w, r, "id")
-	if !ok {
-		return
-	}
-	var req menumodel.CreateParamRequest
-	if err := response.ReadJSON(r, &req); err != nil {
-		apperror.WriteDefinition(w, r, apperror.InvalidRequestBody)
-		return
-	}
-	param, err := h.service.CreateParam(r.Context(), id, req)
-	if err != nil {
-		apperror.Write(w, r, err)
-		return
-	}
-	response.OK(w, r, param)
-}
-
-func (h *Handler) deleteParam(w http.ResponseWriter, r *http.Request, _ menumodel.ActorContext) {
-	paramID, ok := parseIDFromPath(w, r, "paramId")
-	if !ok {
-		return
-	}
-	if err := h.service.DeleteParam(r.Context(), paramID); err != nil {
 		apperror.Write(w, r, err)
 		return
 	}

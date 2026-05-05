@@ -25,9 +25,6 @@ type Repository interface {
 	Update(ctx context.Context, id uint64, req menumodel.SaveRequest) error
 	SoftDelete(ctx context.Context, id uint64) error
 	AssignToRole(ctx context.Context, roleID, menuID uint64) error
-	ListParams(ctx context.Context, menuID uint64) ([]menumodel.RouteParam, error)
-	CreateParam(ctx context.Context, menuID uint64, req menumodel.CreateParamRequest) (uint64, error)
-	DeleteParam(ctx context.Context, paramID uint64) error
 	ListActions(ctx context.Context, menuID uint64) ([]menumodel.MenuAction, error)
 	GetActionByID(ctx context.Context, id uint64) (*menumodel.MenuAction, error)
 	CountActionByCode(ctx context.Context, menuID uint64, code string, excludeID uint64) (int64, error)
@@ -69,16 +66,7 @@ func (s *Service) Tree(ctx context.Context) ([]menumodel.Menu, error) {
 }
 
 func (s *Service) Get(ctx context.Context, id uint64) (*menumodel.Menu, error) {
-	menu, err := s.repo.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	params, err := s.repo.ListParams(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	menu.Params = params
-	return menu, nil
+	return s.repo.GetByID(ctx, id)
 }
 
 func (s *Service) Create(ctx context.Context, req menumodel.SaveRequest) (*menumodel.Menu, error) {
@@ -129,45 +117,6 @@ func (s *Service) Delete(ctx context.Context, id uint64) error {
 		return menumodel.ErrHasChildren
 	}
 	return s.repo.SoftDelete(ctx, id)
-}
-
-func (s *Service) ListParams(ctx context.Context, menuID uint64) ([]menumodel.RouteParam, error) {
-	if _, err := s.repo.GetByID(ctx, menuID); err != nil {
-		return nil, err
-	}
-	return s.repo.ListParams(ctx, menuID)
-}
-
-func (s *Service) CreateParam(ctx context.Context, menuID uint64, req menumodel.CreateParamRequest) (*menumodel.RouteParam, error) {
-	req.ParamKey = strings.TrimSpace(req.ParamKey)
-	req.ParamMode = strings.TrimSpace(req.ParamMode)
-	if req.ParamKey == "" {
-		return nil, menumodel.ErrParamKeyEmpty
-	}
-	if req.ParamMode != "query" && req.ParamMode != "path" {
-		return nil, menumodel.ErrParamModeBad
-	}
-	if _, err := s.repo.GetByID(ctx, menuID); err != nil {
-		return nil, err
-	}
-	id, err := s.repo.CreateParam(ctx, menuID, req)
-	if err != nil {
-		return nil, err
-	}
-	params, err := s.repo.ListParams(ctx, menuID)
-	if err != nil {
-		return nil, err
-	}
-	for i := range params {
-		if params[i].ID == id {
-			return &params[i], nil
-		}
-	}
-	return nil, menumodel.ErrParamNotFound
-}
-
-func (s *Service) DeleteParam(ctx context.Context, paramID uint64) error {
-	return s.repo.DeleteParam(ctx, paramID)
 }
 
 // ── Actions ──────────────────────────────────────────────────────────────────
