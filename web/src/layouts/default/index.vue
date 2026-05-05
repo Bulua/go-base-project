@@ -18,6 +18,8 @@ import { useAuthStore } from '@/store/modules/auth'
 import { useTheme } from '@/composables/common/useTheme'
 import { useWatermark } from '@/composables/common/useWatermark'
 import SettingsDrawer from '@/components/layout/SettingsDrawer.vue'
+import TabBar from '@/components/layout/TabBar.vue'
+import { useTabsStore } from '@/store/modules/tabs'
 import type { MenuRoute } from '@/types/auth'
 
 const authStore = useAuthStore()
@@ -122,8 +124,10 @@ const userInitial = computed(() => username.value.charAt(0).toUpperCase())
 useWatermark(username)
 
 const settingsVisible = ref(false)
+const tabsStore = useTabsStore()
 
 async function handleLogout() {
+  tabsStore.reset()
   await authStore.logoutCurrentUser()
 }
 </script>
@@ -240,11 +244,13 @@ async function handleLogout() {
         </div>
       </header>
 
+      <TabBar />
+
       <main class="bp-content">
         <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
+          <keep-alive :include="tabsStore.cachedNames">
             <component :is="Component" />
-          </transition>
+          </keep-alive>
         </router-view>
       </main>
     </div>
@@ -254,13 +260,5 @@ async function handleLogout() {
 </template>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
 </style>
 

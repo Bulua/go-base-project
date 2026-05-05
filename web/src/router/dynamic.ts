@@ -1,4 +1,4 @@
-import type { Component } from 'vue'
+import { defineComponent, h, type Component } from 'vue'
 import type { MenuRoute } from '@/types/auth'
 import router from './index'
 
@@ -67,10 +67,21 @@ export function registerDynamicRoutes(menus: MenuRoute[]): void {
       )
       continue
     }
+    const routeName = leaf.routeName
+    const wrappedLoader = async () => {
+      const mod = await loader()
+      const base = (mod as { default?: Component }).default ?? (mod as Component)
+      return defineComponent({
+        name: routeName,
+        setup() {
+          return () => h(base)
+        },
+      })
+    }
     router.addRoute('Layout', {
       path: leaf.fullPath,
       name: leaf.routeName,
-      component: loader,
+      component: wrappedLoader,
       meta: { title: leaf.title, keepAlive: leaf.keepAlive },
     })
     REGISTERED_NAMES.add(leaf.routeName)
