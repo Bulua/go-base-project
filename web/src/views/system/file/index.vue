@@ -239,7 +239,7 @@ onMounted(load)
     <!-- File table -->
     <section class="bp-placeholder table-card" v-loading="loading">
       <el-table :data="items" stripe>
-        <el-table-column label="文件名" min-width="200" show-overflow-tooltip>
+        <el-table-column label="文件名" min-width="1" show-overflow-tooltip>
           <template #default="{ row }">
             <div class="file-name-cell">
               <el-icon class="file-icon" :class="isImage(row.mime_type) ? 'is-image' : 'is-file'">
@@ -250,7 +250,7 @@ onMounted(load)
           </template>
         </el-table-column>
 
-        <el-table-column label="类型" width="110" align="center">
+        <el-table-column label="类型" min-width="1" align="center">
           <template #default="{ row }">
             <el-tag :type="mimeTagType(row.mime_type)" size="small">
               {{ mimeLabel(row.mime_type) }}
@@ -258,15 +258,15 @@ onMounted(load)
           </template>
         </el-table-column>
 
-        <el-table-column label="大小" width="100" align="right">
+        <el-table-column label="大小" min-width="1" align="right">
           <template #default="{ row }">{{ formatSize(row.file_size) }}</template>
         </el-table-column>
 
-        <el-table-column label="上传时间" width="180">
+        <el-table-column label="上传时间" min-width="1">
           <template #default="{ row }">{{ formatDate(row.created_at) }}</template>
         </el-table-column>
 
-        <el-table-column label="操作" width="130" align="center" fixed="right">
+        <el-table-column label="操作" min-width="1" align="center">
           <template #default="{ row }">
             <el-button
               v-if="isImage(row.mime_type)"
