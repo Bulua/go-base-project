@@ -16,6 +16,7 @@ type User struct {
 	PrimaryRoleID      *uint64 `json:"primary_role_id,omitempty"`
 	PhoneNumber        *string `json:"phone_number,omitempty"`
 	EmailAddress       *string `json:"email_address,omitempty"`
+	Remark             *string `json:"remark,omitempty"`
 	PasswordHash       string  `json:"-"`
 	UserStatus         int     `json:"user_status"`
 	MustChangePassword bool    `json:"must_change_password"`

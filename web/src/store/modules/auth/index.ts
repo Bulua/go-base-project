@@ -13,6 +13,7 @@ import {
   getStoredSession,
   setStoredSession,
 } from '@/api/auth/session'
+import { downloadFileBlob } from '@/api/file'
 import router from '@/router'
 import { clearDynamicRoutes, registerDynamicRoutes } from '@/router/dynamic'
 import type { AuthAction, AuthSession, CurrentUser, MenuRoute } from '@/types/auth'
@@ -28,6 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
   const actions = ref<AuthAction[]>([])
   const loginLoading = ref(false)
   const workspaceLoading = ref(false)
+  const avatarBlobUrl = ref<string | null>(null)
 
   const isAuthenticated = computed(() => Boolean(session.value?.access_token))
   const roleNames = computed(() =>
@@ -92,6 +94,7 @@ export const useAuthStore = defineStore('auth', () => {
         setStoredSession({ ...session.value, user: profile })
       }
       registerDynamicRoutes(routes)
+      fetchAvatarBlob(profile.avatar_url)
     } catch (error) {
       clearLocalAuth()
       ElMessage.error(error instanceof Error ? error.message : '登录状态已失效')
@@ -100,12 +103,41 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function fetchAvatarBlob(avatarUrl: string | null | undefined) {
+    if (avatarBlobUrl.value) {
+      URL.revokeObjectURL(avatarBlobUrl.value)
+      avatarBlobUrl.value = null
+    }
+    if (!avatarUrl) return
+    const match = avatarUrl.match(/\/api\/v1\/files\/(\d+)\/raw/)
+    if (!match) return
+    try {
+      const blob = await downloadFileBlob(Number(match[1]))
+      avatarBlobUrl.value = URL.createObjectURL(blob)
+    } catch {
+      // avatar fetch failure is non-critical
+    }
+  }
+
+  async function refreshProfile() {
+    const profile = await getProfile()
+    currentUser.value = profile
+    if (session.value) {
+      setStoredSession({ ...session.value, user: profile })
+    }
+    await fetchAvatarBlob(profile.avatar_url)
+  }
+
   function clearLocalAuth() {
     clearStoredSession()
     session.value = null
     currentUser.value = null
     menuRoutes.value = []
     actions.value = []
+    if (avatarBlobUrl.value) {
+      URL.revokeObjectURL(avatarBlobUrl.value)
+      avatarBlobUrl.value = null
+    }
     clearDynamicRoutes()
   }
 
@@ -113,7 +145,9 @@ export const useAuthStore = defineStore('auth', () => {
     actions,
     actionCodes,
     actionKeys,
+    avatarBlobUrl,
     currentUser,
+    fetchAvatarBlob,
     flatMenus,
     isAuthenticated,
     loadWorkspace,
@@ -121,6 +155,7 @@ export const useAuthStore = defineStore('auth', () => {
     loginWithPassword,
     logoutCurrentUser,
     menuRoutes,
+    refreshProfile,
     roleNames,
     session,
     workspaceLoading,

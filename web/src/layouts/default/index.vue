@@ -6,18 +6,20 @@ import {
   ArrowDown,
   ArrowRight,
   Bell,
+  Expand,
+  Fold,
   HomeFilled,
   Moon,
   Setting,
   Sunny,
   SwitchButton,
-  Expand,
-  Fold,
+  User,
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/store/modules/auth'
 import { useTheme } from '@/composables/common/useTheme'
 import { useWatermark } from '@/composables/common/useWatermark'
 import SettingsDrawer from '@/components/layout/SettingsDrawer.vue'
+import ProfileDrawer from '@/components/layout/ProfileDrawer.vue'
 import TabBar from '@/components/layout/TabBar.vue'
 import { useTabsStore } from '@/store/modules/tabs'
 import type { MenuRoute } from '@/types/auth'
@@ -124,7 +126,13 @@ const userInitial = computed(() => username.value.charAt(0).toUpperCase())
 useWatermark(username)
 
 const settingsVisible = ref(false)
+const profileVisible = ref(false)
 const tabsStore = useTabsStore()
+
+function handleCommand(cmd: string) {
+  if (cmd === 'logout') handleLogout()
+  else if (cmd === 'profile') profileVisible.value = true
+}
 
 async function handleLogout() {
   tabsStore.reset()
@@ -225,15 +233,27 @@ async function handleLogout() {
             </button>
           </el-badge>
 
-          <el-dropdown trigger="click" @command="(c: string) => c === 'logout' && handleLogout()">
+          <el-dropdown trigger="click" @command="handleCommand">
             <div class="bp-user-trigger">
-              <div class="bp-user-avatar">{{ userInitial }}</div>
+              <div class="bp-user-avatar">
+                <img
+                  v-if="authStore.avatarBlobUrl"
+                  :src="authStore.avatarBlobUrl"
+                  class="bp-avatar-img"
+                  alt="avatar"
+                />
+                <span v-else>{{ userInitial }}</span>
+              </div>
               <span class="bp-user-name">{{ username }}</span>
               <el-icon><ArrowDown /></el-icon>
             </div>
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item disabled>{{ authStore.roleNames }}</el-dropdown-item>
+                <el-dropdown-item command="profile">
+                  <el-icon><User /></el-icon>
+                  个人信息
+                </el-dropdown-item>
                 <el-dropdown-item divided command="logout">
                   <el-icon><SwitchButton /></el-icon>
                   退出登录
@@ -256,9 +276,16 @@ async function handleLogout() {
     </div>
 
     <SettingsDrawer v-model="settingsVisible" />
+    <ProfileDrawer v-model="profileVisible" />
   </div>
 </template>
 
 <style scoped>
+.bp-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 </style>
 

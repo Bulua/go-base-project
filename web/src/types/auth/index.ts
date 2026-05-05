@@ -10,10 +10,11 @@ export interface CurrentUser {
   user_uuid: string
   login_name: string
   display_name: string
-  avatar_url?: string
+  avatar_url?: string | null
   primary_role_id?: number
-  phone_number?: string
-  email_address?: string
+  phone_number?: string | null
+  email_address?: string | null
+  remark?: string | null
   user_status: number
   must_change_password: boolean
   roles?: Role[]

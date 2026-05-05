@@ -20,13 +20,13 @@ func NewSQLRepository(db *sql.DB) *SQLRepository {
 func (r *SQLRepository) FindUserByLogin(ctx context.Context, loginName string) (*authmodel.User, error) {
 	row := r.db.QueryRowContext(ctx, `
 SELECT id, user_uuid, login_name, password_hash, display_name, avatar_url, primary_role_id,
-       phone_number, email_address, user_status, must_change_password
+       phone_number, email_address, remark, user_status, must_change_password
 FROM gbp_users
 WHERE login_name = ? AND deleted_at IS NULL
 LIMIT 1`, loginName)
 
 	var user authmodel.User
-	var avatarURL, phoneNumber, emailAddress sql.NullString
+	var avatarURL, phoneNumber, emailAddress, remark sql.NullString
 	var primaryRoleID sql.NullInt64
 	if err := row.Scan(
 		&user.ID,
@@ -38,6 +38,7 @@ LIMIT 1`, loginName)
 		&primaryRoleID,
 		&phoneNumber,
 		&emailAddress,
+		&remark,
 		&user.UserStatus,
 		&user.MustChangePassword,
 	); err != nil {
@@ -58,6 +59,9 @@ LIMIT 1`, loginName)
 	}
 	if emailAddress.Valid {
 		user.EmailAddress = &emailAddress.String
+	}
+	if remark.Valid {
+		user.Remark = &remark.String
 	}
 	return &user, nil
 }
