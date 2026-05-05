@@ -36,6 +36,7 @@ watchEffect(() => {
 
 watchEffect(() => {
   document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
+  document.documentElement.classList.toggle('dark', isDark.value)
   try {
     localStorage.setItem(DARK_KEY, isDark.value ? '1' : '0')
   } catch {}

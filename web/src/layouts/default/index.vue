@@ -8,6 +8,7 @@ import {
   Bell,
   HomeFilled,
   Moon,
+  Setting,
   Sunny,
   SwitchButton,
   Expand,
@@ -15,6 +16,8 @@ import {
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/store/modules/auth'
 import { useTheme } from '@/composables/common/useTheme'
+import { useWatermark } from '@/composables/common/useWatermark'
+import SettingsDrawer from '@/components/layout/SettingsDrawer.vue'
 import type { MenuRoute } from '@/types/auth'
 
 const authStore = useAuthStore()
@@ -116,6 +119,10 @@ const username = computed(
 
 const userInitial = computed(() => username.value.charAt(0).toUpperCase())
 
+useWatermark(username)
+
+const settingsVisible = ref(false)
+
 async function handleLogout() {
   await authStore.logoutCurrentUser()
 }
@@ -204,6 +211,10 @@ async function handleLogout() {
             </el-icon>
           </button>
 
+          <button class="bp-icon-btn" title="外观设置" @click="settingsVisible = true">
+            <el-icon><Setting /></el-icon>
+          </button>
+
           <el-badge :value="3" :max="9">
             <button class="bp-icon-btn" title="通知">
               <el-icon><Bell /></el-icon>
@@ -237,6 +248,8 @@ async function handleLogout() {
         </router-view>
       </main>
     </div>
+
+    <SettingsDrawer v-model="settingsVisible" />
   </div>
 </template>
 
@@ -250,3 +263,4 @@ async function handleLogout() {
   opacity: 0;
 }
 </style>
+
