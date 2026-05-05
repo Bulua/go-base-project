@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, EditPen, Plus, Refresh } from '@element-plus/icons-vue'
+import IconPicker from '@/components/common/IconPicker.vue'
 import {
   type CreateMenuResult,
   createMenu,
@@ -416,7 +417,7 @@ async function handleActionDelete(action: MenuAction) {
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="菜单图标">
-              <el-input v-model="form.menu_icon" placeholder="Element Plus 图标名" />
+              <IconPicker v-model="form.menu_icon" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
