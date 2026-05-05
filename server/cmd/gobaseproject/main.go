@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	apihandler "gobaseproject/server/internal/handler/api"
 	audithandler "gobaseproject/server/internal/handler/audit"
 	authhandler "gobaseproject/server/internal/handler/auth"
 	dicthandler "gobaseproject/server/internal/handler/dict"
@@ -15,12 +16,14 @@ import (
 	userhandler "gobaseproject/server/internal/handler/user"
 	"gobaseproject/server/internal/infra/config"
 	"gobaseproject/server/internal/middleware"
+	apirepo "gobaseproject/server/internal/repository/api"
 	auditrepo "gobaseproject/server/internal/repository/audit"
 	authrepo "gobaseproject/server/internal/repository/auth"
 	dictrepo "gobaseproject/server/internal/repository/dict"
 	menurepo "gobaseproject/server/internal/repository/menu"
 	rolerepo "gobaseproject/server/internal/repository/role"
 	userrepo "gobaseproject/server/internal/repository/user"
+	apiservice "gobaseproject/server/internal/service/api"
 	auditservice "gobaseproject/server/internal/service/audit"
 	authservice "gobaseproject/server/internal/service/auth"
 	dictservice "gobaseproject/server/internal/service/dict"
@@ -60,6 +63,7 @@ func main() {
 
 	auditRepository := auditrepo.NewSQLRepository(db)
 	auditSvc := auditservice.NewService(auditRepository)
+	apiSvc := apiservice.NewService(apirepo.NewSQLRepository(db), auditRepository)
 	userService := userservice.NewService(userrepo.NewSQLRepository(db), auditRepository)
 	roleService := roleservice.NewService(rolerepo.NewSQLRepository(db), auditRepository)
 	menuService := menuservice.NewService(menurepo.NewSQLRepository(db))
@@ -73,6 +77,7 @@ func main() {
 	menuhandler.NewHandler(menuService, authService, cfg.CodeGen.WebSrcRoot).RegisterRoutes(mux)
 	dicthandler.NewHandler(dictService, authService).RegisterRoutes(mux)
 	audithandler.NewHandler(auditSvc).RegisterRoutes(mux)
+	apihandler.NewHandler(apiSvc, authService).RegisterRoutes(mux)
 
 	server := &http.Server{
 		Addr: ":" + cfg.App.Port,

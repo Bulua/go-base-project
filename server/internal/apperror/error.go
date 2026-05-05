@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	apimodel "gobaseproject/server/internal/model/api"
 	authmodel "gobaseproject/server/internal/model/auth"
 	dictmodel "gobaseproject/server/internal/model/dict"
 	menumodel "gobaseproject/server/internal/model/menu"
@@ -77,6 +78,14 @@ var registry = []struct {
 	{dictmodel.ErrItemValueTaken, Definition{Code: 409502, Status: http.StatusConflict, Message: "该字典下字典项值已存在"}},
 	{dictmodel.ErrItemLabelEmpty, Definition{Code: 400503, Status: http.StatusBadRequest, Message: "字典项标签不能为空"}},
 	{dictmodel.ErrItemValueEmpty, Definition{Code: 400504, Status: http.StatusBadRequest, Message: "字典项值不能为空"}},
+	{apimodel.ErrAPINotFound, Definition{Code: 404601, Status: http.StatusNotFound, Message: "API 资源不存在"}},
+	{apimodel.ErrAPIPathEmpty, Definition{Code: 400601, Status: http.StatusBadRequest, Message: "API 路径不能为空"}},
+	{apimodel.ErrAPIMethodInvalid, Definition{Code: 400602, Status: http.StatusBadRequest, Message: "HTTP 方法不合法"}},
+	{apimodel.ErrAPIPathTaken, Definition{Code: 409601, Status: http.StatusConflict, Message: "该路径和方法的 API 已存在"}},
+	{apimodel.ErrAPIHasPolicies, Definition{Code: 409603, Status: http.StatusConflict, Message: "该 API 已绑定权限策略，请先移除角色关联后再删除"}},
+	{apimodel.ErrSkipNotFound, Definition{Code: 404602, Status: http.StatusNotFound, Message: "白名单规则不存在"}},
+	{apimodel.ErrSkipPathEmpty, Definition{Code: 400603, Status: http.StatusBadRequest, Message: "白名单路径不能为空"}},
+	{apimodel.ErrSkipPathTaken, Definition{Code: 409602, Status: http.StatusConflict, Message: "该路径和方法的白名单规则已存在"}},
 }
 
 func Write(w http.ResponseWriter, r *http.Request, err error) {
