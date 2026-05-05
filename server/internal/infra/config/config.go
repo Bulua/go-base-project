@@ -24,6 +24,12 @@ type Config struct {
 	Redis    RedisConfig    `yaml:"redis"`
 	JWT      JWTConfig      `yaml:"jwt"`
 	CodeGen  CodeGenConfig  `yaml:"codegen"`
+	Upload   UploadConfig   `yaml:"upload"`
+}
+
+type UploadConfig struct {
+	Dir       string `yaml:"dir"`        // local storage root, default ./uploads
+	MaxSizeMB int64  `yaml:"max_size_mb"` // per-file limit in MB, default 50
 }
 
 type CodeGenConfig struct {
@@ -128,6 +134,9 @@ func applyEnv(cfg *Config) {
 	setString(&cfg.JWT.Secret, "JWT_SECRET")
 	setInt(&cfg.JWT.AccessTokenTTLMinutes, "JWT_ACCESS_TTL_MINUTES")
 	setInt(&cfg.JWT.RefreshTokenTTLMinutes, "JWT_REFRESH_TTL_MINUTES")
+
+	setString(&cfg.Upload.Dir, "UPLOAD_DIR")
+	setInt64(&cfg.Upload.MaxSizeMB, "UPLOAD_MAX_SIZE_MB")
 }
 
 func validate(cfg Config) error {
@@ -174,8 +183,17 @@ func setInt(target *int, key string) {
 	if raw == "" {
 		return
 	}
-	value, err := strconv.Atoi(raw)
-	if err == nil {
+	if value, err := strconv.Atoi(raw); err == nil {
+		*target = value
+	}
+}
+
+func setInt64(target *int64, key string) {
+	raw := strings.TrimSpace(os.Getenv(key))
+	if raw == "" {
+		return
+	}
+	if value, err := strconv.ParseInt(raw, 10, 64); err == nil {
 		*target = value
 	}
 }

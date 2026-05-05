@@ -11,6 +11,7 @@ import (
 	audithandler "gobaseproject/server/internal/handler/audit"
 	authhandler "gobaseproject/server/internal/handler/auth"
 	dicthandler "gobaseproject/server/internal/handler/dict"
+	filehandler "gobaseproject/server/internal/handler/file"
 	menuhandler "gobaseproject/server/internal/handler/menu"
 	rolehandler "gobaseproject/server/internal/handler/role"
 	userhandler "gobaseproject/server/internal/handler/user"
@@ -20,6 +21,7 @@ import (
 	auditrepo "gobaseproject/server/internal/repository/audit"
 	authrepo "gobaseproject/server/internal/repository/auth"
 	dictrepo "gobaseproject/server/internal/repository/dict"
+	filerepo "gobaseproject/server/internal/repository/file"
 	menurepo "gobaseproject/server/internal/repository/menu"
 	rolerepo "gobaseproject/server/internal/repository/role"
 	userrepo "gobaseproject/server/internal/repository/user"
@@ -27,6 +29,7 @@ import (
 	auditservice "gobaseproject/server/internal/service/audit"
 	authservice "gobaseproject/server/internal/service/auth"
 	dictservice "gobaseproject/server/internal/service/dict"
+	fileservice "gobaseproject/server/internal/service/file"
 	menuservice "gobaseproject/server/internal/service/menu"
 	roleservice "gobaseproject/server/internal/service/role"
 	userservice "gobaseproject/server/internal/service/user"
@@ -65,6 +68,12 @@ func main() {
 	auditSvc := auditservice.NewService(auditRepository)
 	apiSvc := apiservice.NewService(apirepo.NewSQLRepository(db), auditRepository)
 	userService := userservice.NewService(userrepo.NewSQLRepository(db), auditRepository)
+
+	uploadDir := cfg.Upload.Dir
+	if uploadDir == "" {
+		uploadDir = "./uploads"
+	}
+	fileSvc := fileservice.NewService(filerepo.NewSQLRepository(db), uploadDir, cfg.Upload.MaxSizeMB<<20)
 	roleService := roleservice.NewService(rolerepo.NewSQLRepository(db), auditRepository)
 	menuService := menuservice.NewService(menurepo.NewSQLRepository(db))
 	dictService := dictservice.NewService(dictrepo.NewSQLRepository(db))
@@ -78,6 +87,7 @@ func main() {
 	dicthandler.NewHandler(dictService, authService).RegisterRoutes(mux)
 	audithandler.NewHandler(auditSvc).RegisterRoutes(mux)
 	apihandler.NewHandler(apiSvc, authService).RegisterRoutes(mux)
+	filehandler.NewHandler(fileSvc, authService).RegisterRoutes(mux)
 
 	server := &http.Server{
 		Addr: ":" + cfg.App.Port,

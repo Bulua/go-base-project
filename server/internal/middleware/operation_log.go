@@ -28,9 +28,10 @@ func OperationLog(repo logWriter, tokens jwtParser) func(http.Handler) http.Hand
 			}
 			start := time.Now()
 
-			// read + restore request body
+			// read + restore request body (skip multipart to avoid consuming file data)
 			var reqBody string
-			if r.Body != nil {
+			ct := r.Header.Get("Content-Type")
+			if r.Body != nil && !strings.HasPrefix(ct, "multipart/") {
 				raw, err := io.ReadAll(io.LimitReader(r.Body, 64*1024))
 				r.Body.Close()
 				r.Body = io.NopCloser(bytes.NewReader(raw))
