@@ -83,9 +83,47 @@ function isGroupOpen(item: DisplayMenu): boolean {
   return openGroups.value.has(item.id)
 }
 
+function findFirstLeaf(menus: MenuRoute[], parentPath: string): string | null {
+  for (const m of menus) {
+    const fp = joinPath(parentPath, m.route_path ?? '')
+    if (m.menu_type === 2 && m.component_path && m.component_path !== 'layouts/default') {
+      return fp
+    }
+    if (m.children?.length) {
+      const found = findFirstLeaf(m.children, fp)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+function resolveDirectoryTarget(item: DisplayMenu): string | null {
+  if (item.redirect_path) return item.redirect_path
+  // find the matching raw menu entry to search its full (unfiltered) children
+  function findRaw(menus: MenuRoute[], fp: string): { menu: MenuRoute; path: string } | null {
+    for (const m of menus) {
+      const p = joinPath(fp, m.route_path ?? '')
+      if (m.id === item.id) return { menu: m, path: p }
+      if (m.children?.length) {
+        const found = findRaw(m.children, p)
+        if (found) return found
+      }
+    }
+    return null
+  }
+  const raw = findRaw(authStore.menuRoutes, '')
+  if (!raw) return null
+  return findFirstLeaf(raw.menu.children ?? [], raw.path)
+}
+
 async function navigate(item: DisplayMenu) {
   if (item.hasChildren) {
     toggleGroup(item.id)
+    return
+  }
+  if (item.menu_type === 1) {
+    const target = resolveDirectoryTarget(item)
+    if (target && target !== activePath.value) await router.push(target)
     return
   }
   if (item.fullPath && item.fullPath !== activePath.value) {
