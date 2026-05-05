@@ -15,7 +15,13 @@ watch(
   () => {
     const name = (route.name as string) || route.path
     const title = (route.meta?.title as string) || name
-    tabsStore.add({ path: route.path, name, title })
+    tabsStore.add({
+      path: route.path,
+      name,
+      title,
+      keepAlive: !!route.meta?.keepAlive,
+      affix: !!route.meta?.affix,
+    })
   },
   { immediate: true },
 )
@@ -27,7 +33,7 @@ function switchTab(path: string) {
 function closeTab(e: MouseEvent, path: string) {
   e.stopPropagation()
   const nextPath = tabsStore.close(path)
-  if (path === route.path) {
+  if (path === route.path && nextPath !== path) {
     router.push(nextPath ?? '/')
   }
 }
@@ -37,6 +43,10 @@ const ctxVisible = ref(false)
 const ctxX = ref(0)
 const ctxY = ref(0)
 const ctxPath = ref('')
+
+const ctxTabAffix = computed(
+  () => tabsStore.list.find((t) => t.path === ctxPath.value)?.affix ?? false,
+)
 
 function showCtx(e: MouseEvent, path: string) {
   e.preventDefault()
@@ -51,6 +61,7 @@ function hideCtx() {
 }
 
 function ctxCloseCurrent() {
+  if (ctxTabAffix.value) return
   closeTab(new MouseEvent('click'), ctxPath.value)
   hideCtx()
 }
@@ -63,7 +74,8 @@ function ctxCloseOthers() {
 
 function ctxCloseAll() {
   tabsStore.closeAll()
-  router.push('/')
+  const first = tabsStore.list[0]
+  router.push(first?.path ?? '/')
   hideCtx()
 }
 
@@ -82,12 +94,12 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
         v-for="tab in tabsStore.list"
         :key="tab.path"
         class="tab-item"
-        :class="{ active: tab.path === activePath }"
+        :class="{ active: tab.path === activePath, affix: tab.affix }"
         @click="switchTab(tab.path)"
         @contextmenu.prevent="showCtx($event, tab.path)"
       >
         <span class="tab-title">{{ tab.title }}</span>
-        <el-icon class="tab-close" @click="closeTab($event, tab.path)">
+        <el-icon v-if="!tab.affix" class="tab-close" @click="closeTab($event, tab.path)">
           <Close />
         </el-icon>
       </div>
@@ -98,7 +110,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   <teleport to="body">
     <div v-if="ctxVisible" class="tab-ctx-mask" @click="hideCtx" @contextmenu.prevent />
     <ul v-if="ctxVisible" class="tab-ctx-menu" :style="{ left: ctxX + 'px', top: ctxY + 'px' }">
-      <li @click="ctxCloseCurrent">关闭当前</li>
+      <li :class="{ disabled: ctxTabAffix }" @click="ctxCloseCurrent">关闭当前</li>
       <li @click="ctxCloseOthers">关闭其他</li>
       <li @click="ctxCloseAll">关闭全部</li>
     </ul>
@@ -164,6 +176,10 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   background: var(--el-color-primary);
 }
 
+.tab-item.affix {
+  padding-right: 16px;
+}
+
 .tab-title {
   max-width: 120px;
   overflow: hidden;
@@ -217,5 +233,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
 .tab-ctx-menu li:hover {
   background: var(--el-fill-color-light);
+}
+
+.tab-ctx-menu li.disabled {
+  color: var(--el-text-color-placeholder);
+  cursor: not-allowed;
+}
+
+.tab-ctx-menu li.disabled:hover {
+  background: transparent;
 }
 </style>

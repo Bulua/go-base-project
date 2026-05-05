@@ -15,7 +15,8 @@ import {
 } from '@/api/auth/session'
 import { downloadFileBlob } from '@/api/file'
 import router from '@/router'
-import { clearDynamicRoutes, registerDynamicRoutes } from '@/router/dynamic'
+import { clearDynamicRoutes, collectAffixTabs, registerDynamicRoutes } from '@/router/dynamic'
+import { useTabsStore } from '@/store/modules/tabs'
 import type { AuthAction, AuthSession, CurrentUser, MenuRoute } from '@/types/auth'
 
 export interface FlatMenu extends MenuRoute {
@@ -94,6 +95,7 @@ export const useAuthStore = defineStore('auth', () => {
         setStoredSession({ ...session.value, user: profile })
       }
       registerDynamicRoutes(routes)
+      useTabsStore().initAffixTabs(collectAffixTabs(routes))
       fetchAvatarBlob(profile.avatar_url)
     } catch (error) {
       clearLocalAuth()

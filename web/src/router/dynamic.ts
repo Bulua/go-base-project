@@ -1,5 +1,6 @@
 import { defineComponent, h, type Component } from 'vue'
 import type { MenuRoute } from '@/types/auth'
+import type { TabItem } from '@/store/modules/tabs'
 import router from './index'
 
 type ViewLoader = () => Promise<Component>
@@ -14,6 +15,7 @@ interface FlatLeaf {
   routeName: string
   title: string
   keepAlive: boolean
+  affix: boolean
 }
 
 function joinPath(parent: string, child: string): string {
@@ -37,6 +39,7 @@ function flattenLeaves(menus: MenuRoute[], parentPath = ''): FlatLeaf[] {
         routeName: m.route_name || `menu-${m.id}`,
         title: m.menu_title,
         keepAlive: m.is_keep_alive,
+        affix: m.is_affix,
       })
     }
     if (m.children?.length) {
@@ -82,10 +85,22 @@ export function registerDynamicRoutes(menus: MenuRoute[]): void {
       path: leaf.fullPath,
       name: leaf.routeName,
       component: wrappedLoader,
-      meta: { title: leaf.title, keepAlive: leaf.keepAlive },
+      meta: { title: leaf.title, keepAlive: leaf.keepAlive, affix: leaf.affix },
     })
     REGISTERED_NAMES.add(leaf.routeName)
   }
+}
+
+export function collectAffixTabs(menus: MenuRoute[]): TabItem[] {
+  return flattenLeaves(menus)
+    .filter((leaf) => leaf.affix)
+    .map((leaf) => ({
+      path: leaf.fullPath,
+      name: leaf.routeName,
+      title: leaf.title,
+      affix: true,
+      keepAlive: leaf.keepAlive,
+    }))
 }
 
 export function clearDynamicRoutes(): void {
