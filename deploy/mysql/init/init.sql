@@ -387,21 +387,24 @@ INSERT INTO `gbp_dictionaries` (`id`, `dict_name`, `dict_code`, `dict_status`, `
   (1, '用户状态', 'user_status', 1, '用户启用/冻结状态'),
   (2, '角色状态', 'role_status', 1, '角色启用/禁用状态'),
   (3, '菜单类型', 'menu_type',   1, '目录、菜单、隐藏路由、外链'),
-  (4, '参数类型', 'param_type',  1, '系统参数值类型');
+  (4, '参数类型', 'param_type',  1, '系统参数值类型'),
+  (5, '菜单状态', 'menu_status', 1, '菜单启用/禁用状态');
 
-INSERT INTO `gbp_dictionary_items` (`dict_id`, `item_label`, `item_value`, `sort_no`) VALUES
-  (1, '正常',   '1',       1),
-  (1, '冻结',   '2',       2),
-  (2, '启用',   '1',       1),
-  (2, '禁用',   '2',       2),
-  (3, '目录',   '1',       1),
-  (3, '菜单',   '2',       2),
-  (3, '隐藏路由','3',      3),
-  (3, '外链',   '4',       4),
-  (4, '字符串', 'string',  1),
-  (4, '数字',   'number',  2),
-  (4, '布尔值', 'boolean', 3),
-  (4, 'JSON',   'json',    4);
+INSERT INTO `gbp_dictionary_items` (`dict_id`, `item_label`, `item_value`, `item_extra`, `sort_no`) VALUES
+  (1, '正常',    '1',       'success', 1),
+  (1, '冻结',    '2',       'danger',  2),
+  (2, '启用',    '1',       'success', 1),
+  (2, '禁用',    '2',       'danger',  2),
+  (3, '目录',    '1',       'primary', 1),
+  (3, '菜单',    '2',       'success', 2),
+  (3, '隐藏路由','3',       'warning', 3),
+  (3, '外链',    '4',       'info',    4),
+  (4, '字符串',  'string',  NULL,      1),
+  (4, '数字',    'number',  NULL,      2),
+  (4, '布尔值',  'boolean', NULL,      3),
+  (4, 'JSON',    'json',    NULL,      4),
+  (5, '启用',    '1',       'success', 1),
+  (5, '禁用',    '2',       'danger',  2);
 
 -- ── 系统参数 ─────────────────────────────────────────────────────────────────
 

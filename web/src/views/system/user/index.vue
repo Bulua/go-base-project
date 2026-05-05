@@ -29,9 +29,12 @@ import type {
   UserListQuery,
   UserRole,
 } from '@/types/user'
+import { useDict } from '@/composables/useDict'
 
 const STATUS_ACTIVE = 1
 const STATUS_FROZEN = 2
+
+const userStatusDict = useDict('user_status')
 
 const loading = ref(false)
 const items = ref<UserItem[]>([])
@@ -409,10 +412,11 @@ function formatDateTime(value?: string | null) {
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag
-              :type="row.user_status === STATUS_ACTIVE ? 'success' : 'danger'"
+              :type="userStatusDict.typeOf(row.user_status)"
+              :color="userStatusDict.colorOf(row.user_status)"
               size="small"
             >
-              {{ row.user_status === STATUS_ACTIVE ? '正常' : '冻结' }}
+              {{ userStatusDict.labelOf(row.user_status) }}
             </el-tag>
           </template>
         </el-table-column>

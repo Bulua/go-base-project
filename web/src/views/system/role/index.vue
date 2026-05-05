@@ -34,9 +34,12 @@ import type {
   RoleResources,
   UpdateRolePayload,
 } from '@/types/role'
+import { useDict } from '@/composables/useDict'
 
 const STATUS_ACTIVE = 1
 const STATUS_DISABLED = 2
+
+const roleStatusDict = useDict('role_status')
 
 const loading = ref(false)
 const items = ref<RoleItem[]>([])
@@ -495,10 +498,11 @@ function methodTagType(method: string) {
         <el-table-column label="状态" width="90">
           <template #default="{ row }">
             <el-tag
-              :type="row.role_status === STATUS_ACTIVE ? 'success' : 'danger'"
+              :type="roleStatusDict.typeOf(row.role_status)"
+              :color="roleStatusDict.colorOf(row.role_status)"
               size="small"
             >
-              {{ row.role_status === STATUS_ACTIVE ? '启用' : '禁用' }}
+              {{ roleStatusDict.labelOf(row.role_status) }}
             </el-tag>
           </template>
         </el-table-column>

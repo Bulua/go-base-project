@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, EditPen, Plus, Refresh } from '@element-plus/icons-vue'
 import IconPicker from '@/components/common/IconPicker.vue'
+import { useDict } from '@/composables/useDict'
 import {
   type CreateMenuResult,
   createMenu,
@@ -16,20 +17,16 @@ import {
 } from '@/api/menu'
 import type { MenuItem, MenuAction, SaveActionPayload, SaveMenuPayload } from '@/types/menu'
 
-// ── 菜单类型 ───────────────────────────────────────────────────────────────
+// ── 菜单类型（用于表单下拉，保持本地常量；标签颜色由字典驱动）
 const MENU_TYPES = [
-  { value: 1, label: '目录', type: 'primary' },
-  { value: 2, label: '菜单', type: 'success' },
-  { value: 3, label: '隐藏路由', type: 'warning' },
-  { value: 4, label: '外链', type: 'info' },
+  { value: 1, label: '目录' },
+  { value: 2, label: '菜单' },
+  { value: 3, label: '隐藏路由' },
+  { value: 4, label: '外链' },
 ] as const
 
-function menuTypeLabel(type: number) {
-  return MENU_TYPES.find((t) => t.value === type)?.label ?? '未知'
-}
-function menuTypeTag(type: number) {
-  return MENU_TYPES.find((t) => t.value === type)?.type ?? 'info'
-}
+const menuTypeDict = useDict('menu_type')
+const menuStatusDict = useDict('menu_status')
 
 // ── 数据 ──────────────────────────────────────────────────────────────────
 const loading = ref(false)
@@ -268,8 +265,12 @@ async function handleActionDelete(action: MenuAction) {
 
       <el-table-column label="类型" width="90" align="center">
         <template #default="{ row }">
-          <el-tag :type="menuTypeTag(row.menu_type)" size="small">
-            {{ menuTypeLabel(row.menu_type) }}
+          <el-tag
+            :type="menuTypeDict.typeOf(row.menu_type)"
+            :color="menuTypeDict.colorOf(row.menu_type)"
+            size="small"
+          >
+            {{ menuTypeDict.labelOf(row.menu_type) }}
           </el-tag>
         </template>
       </el-table-column>
@@ -289,8 +290,12 @@ async function handleActionDelete(action: MenuAction) {
 
       <el-table-column label="状态" width="80" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.menu_status === 1 ? 'success' : 'danger'" size="small">
-            {{ row.menu_status === 1 ? '启用' : '禁用' }}
+          <el-tag
+            :type="menuStatusDict.typeOf(row.menu_status)"
+            :color="menuStatusDict.colorOf(row.menu_status)"
+            size="small"
+          >
+            {{ menuStatusDict.labelOf(row.menu_status) }}
           </el-tag>
         </template>
       </el-table-column>

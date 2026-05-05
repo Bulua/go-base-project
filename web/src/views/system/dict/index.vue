@@ -13,6 +13,7 @@ import {
   deleteDictItem,
 } from '@/api/dict'
 import type { Dictionary, DictItem, DictListQuery, SaveDictPayload, SaveItemPayload } from '@/types/dict'
+import { clearDictCache } from '@/composables/useDict'
 
 const STATUS_ACTIVE = 1
 const STATUS_DISABLED = 2
@@ -229,6 +230,7 @@ async function handleItemSubmit() {
       itemRows.value.push(created)
       ElMessage.success('创建成功')
     }
+    clearDictCache(drawerDict.value.dict_code)
     itemFormVisible.value = false
   } catch (e) {
     ElMessage.error(e instanceof Error ? e.message : '保存失败')
@@ -244,6 +246,7 @@ async function handleItemDelete(item: DictItem) {
     })
     await deleteDictItem(item.id)
     itemRows.value = itemRows.value.filter((i) => i.id !== item.id)
+    if (drawerDict.value) clearDictCache(drawerDict.value.dict_code)
     ElMessage.success('删除成功')
   } catch (e) {
     if (e !== 'cancel') ElMessage.error(e instanceof Error ? e.message : '删除失败')
