@@ -85,6 +85,28 @@ func buildWhere(q filemodel.FileListQuery) (string, []interface{}) {
 		conds = append(conds, "original_name LIKE ?")
 		args = append(args, "%"+escapeLike(q.Keyword)+"%")
 	}
+	switch q.MimeCategory {
+	case "image":
+		conds = append(conds, "mime_type LIKE 'image/%'")
+	case "video":
+		conds = append(conds, "mime_type LIKE 'video/%'")
+	case "audio":
+		conds = append(conds, "mime_type LIKE 'audio/%'")
+	case "text":
+		conds = append(conds, "mime_type LIKE 'text/%'")
+	case "pdf":
+		conds = append(conds, "mime_type LIKE '%pdf%'")
+	case "other":
+		conds = append(conds, "mime_type NOT LIKE 'image/%' AND mime_type NOT LIKE 'video/%' AND mime_type NOT LIKE 'audio/%' AND mime_type NOT LIKE 'text/%' AND mime_type NOT LIKE '%pdf%'")
+	}
+	if q.StartDate != "" {
+		conds = append(conds, "DATE(created_at) >= ?")
+		args = append(args, q.StartDate)
+	}
+	if q.EndDate != "" {
+		conds = append(conds, "DATE(created_at) <= ?")
+		args = append(args, q.EndDate)
+	}
 	return "WHERE " + strings.Join(conds, " AND "), args
 }
 

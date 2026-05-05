@@ -12,6 +12,9 @@ export interface FileListQuery {
   page: number
   page_size: number
   keyword?: string
+  mime_category?: string
+  start_date?: string
+  end_date?: string
 }
 
 export interface FileListResult {

@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import * as Icons from '@element-plus/icons-vue'
 
-const props = defineProps<{ modelValue: string | null }>()
+const props = defineProps<{ modelValue?: string | null }>()
 const emit = defineEmits<{ (e: 'update:modelValue', v: string | null): void }>()
 
 const visible = ref(false)

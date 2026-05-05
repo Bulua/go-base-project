@@ -63,9 +63,12 @@ func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {
 // GET /api/v1/files
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	q := filemodel.FileListQuery{
-		Page:     parseIntDefault(r.URL.Query().Get("page"), 1),
-		PageSize: parseIntDefault(r.URL.Query().Get("page_size"), 10),
-		Keyword:  r.URL.Query().Get("keyword"),
+		Page:         parseIntDefault(r.URL.Query().Get("page"), 1),
+		PageSize:     parseIntDefault(r.URL.Query().Get("page_size"), 10),
+		Keyword:      r.URL.Query().Get("keyword"),
+		MimeCategory: r.URL.Query().Get("mime_category"),
+		StartDate:    r.URL.Query().Get("start_date"),
+		EndDate:      r.URL.Query().Get("end_date"),
 	}
 	result, err := h.svc.List(r.Context(), q)
 	if err != nil {

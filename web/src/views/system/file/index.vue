@@ -16,7 +16,12 @@ const filters = reactive<FileListQuery>({
   page: 1,
   page_size: 10,
   keyword: '',
+  mime_category: '',
+  start_date: '',
+  end_date: '',
 })
+
+const dateRange = ref<[string, string] | null>(null)
 
 async function load() {
   loading.value = true
@@ -32,12 +37,23 @@ async function load() {
 }
 
 function handleSearch() {
+  if (dateRange.value) {
+    filters.start_date = dateRange.value[0]
+    filters.end_date = dateRange.value[1]
+  } else {
+    filters.start_date = ''
+    filters.end_date = ''
+  }
   filters.page = 1
   load()
 }
 
 function handleReset() {
   filters.keyword = ''
+  filters.mime_category = ''
+  filters.start_date = ''
+  filters.end_date = ''
+  dateRange.value = null
   filters.page = 1
   load()
 }
@@ -178,18 +194,41 @@ onMounted(load)
             v-model="filters.keyword"
             placeholder="搜索文件名"
             clearable
-            style="width: 200px"
+            style="width: 180px"
+          />
+        </el-form-item>
+        <el-form-item label="文件类型">
+          <el-select v-model="filters.mime_category" clearable style="width: 110px">
+            <el-option label="全部" value="" />
+            <el-option label="图片" value="image" />
+            <el-option label="视频" value="video" />
+            <el-option label="音频" value="audio" />
+            <el-option label="文本" value="text" />
+            <el-option label="PDF" value="pdf" />
+            <el-option label="其他" value="other" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="上传时间">
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            style="width: 220px"
           />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
           <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+        </el-form-item>
+        <el-form-item style="margin-left: auto">
           <el-upload
             multiple
             :show-file-list="false"
             :http-request="handleUpload"
             :disabled="uploading"
-            style="display: inline-block"
           >
             <el-button type="primary" :icon="Upload" :loading="uploading">上传文件</el-button>
           </el-upload>
@@ -200,7 +239,7 @@ onMounted(load)
     <!-- File table -->
     <section class="bp-placeholder table-card" v-loading="loading">
       <el-table :data="items" stripe>
-        <el-table-column label="文件名" min-width="220" show-overflow-tooltip>
+        <el-table-column label="文件名" min-width="200" show-overflow-tooltip>
           <template #default="{ row }">
             <div class="file-name-cell">
               <el-icon class="file-icon" :class="isImage(row.mime_type) ? 'is-image' : 'is-file'">

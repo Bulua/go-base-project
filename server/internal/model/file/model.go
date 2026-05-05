@@ -16,9 +16,12 @@ type FileRecord struct {
 }
 
 type FileListQuery struct {
-	Page     int
-	PageSize int
-	Keyword  string
+	Page         int
+	PageSize     int
+	Keyword      string
+	MimeCategory string // image | video | audio | text | pdf | other
+	StartDate    string // YYYY-MM-DD
+	EndDate      string // YYYY-MM-DD
 }
 
 type FileListResult struct {
