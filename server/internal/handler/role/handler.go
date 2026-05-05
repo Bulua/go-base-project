@@ -11,6 +11,7 @@ import (
 	authservice "gobaseproject/server/internal/service/auth"
 	roleservice "gobaseproject/server/internal/service/role"
 	"gobaseproject/server/pkg/response"
+	"gobaseproject/server/pkg/routereg"
 )
 
 type TokenParser interface {
@@ -43,6 +44,22 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("PUT /api/v1/roles/{id}/apis", h.withAuth(h.assignAPIs))
 	mux.HandleFunc("GET /api/v1/roles/{id}/data-scopes", h.withAuth(h.getDataScopes))
 	mux.HandleFunc("PUT /api/v1/roles/{id}/data-scopes", h.withAuth(h.assignDataScopes))
+
+	routereg.Add("GET",    "/api/v1/roles/tree",              "role", "角色树")
+	routereg.Add("GET",    "/api/v1/roles/resources",         "role", "权限资源目录")
+	routereg.Add("GET",    "/api/v1/roles",                   "role", "角色列表")
+	routereg.Add("POST",   "/api/v1/roles",                   "role", "创建角色")
+	routereg.Add("GET",    "/api/v1/roles/{id}",              "role", "角色详情")
+	routereg.Add("PUT",    "/api/v1/roles/{id}",              "role", "修改角色")
+	routereg.Add("DELETE", "/api/v1/roles/{id}",              "role", "删除角色")
+	routereg.Add("GET",    "/api/v1/roles/{id}/menus",        "role", "角色菜单")
+	routereg.Add("PUT",    "/api/v1/roles/{id}/menus",        "role", "分配菜单")
+	routereg.Add("GET",    "/api/v1/roles/{id}/actions",      "role", "角色按钮权限")
+	routereg.Add("PUT",    "/api/v1/roles/{id}/actions",      "role", "分配按钮权限")
+	routereg.Add("GET",    "/api/v1/roles/{id}/apis",         "role", "角色API权限")
+	routereg.Add("PUT",    "/api/v1/roles/{id}/apis",         "role", "分配API权限")
+	routereg.Add("GET",    "/api/v1/roles/{id}/data-scopes",  "role", "角色数据范围")
+	routereg.Add("PUT",    "/api/v1/roles/{id}/data-scopes",  "role", "分配数据范围")
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────────────

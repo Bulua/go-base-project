@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"net/http"
@@ -34,6 +35,7 @@ import (
 	roleservice "gobaseproject/server/internal/service/role"
 	userservice "gobaseproject/server/internal/service/user"
 	"gobaseproject/server/pkg/response"
+	"gobaseproject/server/pkg/routereg"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -88,6 +90,10 @@ func main() {
 	audithandler.NewHandler(auditSvc).RegisterRoutes(mux)
 	apihandler.NewHandler(apiSvc, authService).RegisterRoutes(mux)
 	filehandler.NewHandler(fileSvc, authService).RegisterRoutes(mux)
+
+	if err := apiSvc.SyncRoutes(context.Background(), routereg.All()); err != nil {
+		fmt.Fprintf(os.Stderr, "warn: sync api routes: %v\n", err)
+	}
 
 	server := &http.Server{
 		Addr: ":" + cfg.App.Port,

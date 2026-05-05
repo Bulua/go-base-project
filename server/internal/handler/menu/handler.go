@@ -12,6 +12,7 @@ import (
 	menuservice "gobaseproject/server/internal/service/menu"
 	"gobaseproject/server/pkg/codegen"
 	"gobaseproject/server/pkg/response"
+	"gobaseproject/server/pkg/routereg"
 )
 
 type TokenParser interface {
@@ -43,6 +44,20 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/v1/menus/{id}/params", h.withAuth(h.createParam))
 	mux.HandleFunc("GET /api/v1/menus/{id}/actions", h.withAuth(h.listActions))
 	mux.HandleFunc("POST /api/v1/menus/{id}/actions", h.withAuth(h.createAction))
+
+	routereg.Add("GET",    "/api/v1/menus/tree",          "menu", "菜单树")
+	routereg.Add("GET",    "/api/v1/menus",               "menu", "菜单列表")
+	routereg.Add("POST",   "/api/v1/menus",               "menu", "创建菜单")
+	routereg.Add("GET",    "/api/v1/menus/{id}",          "menu", "菜单详情")
+	routereg.Add("PUT",    "/api/v1/menus/{id}",          "menu", "修改菜单")
+	routereg.Add("DELETE", "/api/v1/menus/{id}",          "menu", "删除菜单")
+	routereg.Add("GET",    "/api/v1/menus/{id}/params",   "menu", "菜单路由参数")
+	routereg.Add("POST",   "/api/v1/menus/{id}/params",   "menu", "新增路由参数")
+	routereg.Add("DELETE", "/api/v1/menus/params/{id}",   "menu", "删除路由参数")
+	routereg.Add("GET",    "/api/v1/menus/{id}/actions",  "menu", "菜单按钮权限")
+	routereg.Add("POST",   "/api/v1/menus/{id}/actions",  "menu", "新增按钮权限")
+	routereg.Add("PUT",    "/api/v1/menu-actions/{id}",   "menu", "修改按钮权限")
+	routereg.Add("DELETE", "/api/v1/menu-actions/{id}",   "menu", "删除按钮权限")
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────────────

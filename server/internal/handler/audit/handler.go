@@ -8,6 +8,7 @@ import (
 	"gobaseproject/server/internal/apperror"
 	auditmodel "gobaseproject/server/internal/model/audit"
 	"gobaseproject/server/pkg/response"
+	"gobaseproject/server/pkg/routereg"
 )
 
 type auditService interface {
@@ -33,6 +34,12 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/audit/login-logs", h.listLoginLogs)
 	mux.HandleFunc("GET /api/v1/audit/operation-logs", h.listOperationLogs)
 	mux.HandleFunc("GET /api/v1/audit/operation-logs/{id}", h.getOperationLog)
+
+	routereg.Add("GET",    "/api/v1/audit/login-logs",             "audit", "登录日志列表")
+	routereg.Add("DELETE", "/api/v1/audit/login-logs/cleanup",     "audit", "登录日志清理")
+	routereg.Add("GET",    "/api/v1/audit/operation-logs",         "audit", "操作日志列表")
+	routereg.Add("GET",    "/api/v1/audit/operation-logs/{id}",    "audit", "操作日志详情")
+	routereg.Add("DELETE", "/api/v1/audit/operation-logs/cleanup", "audit", "操作日志清理")
 }
 
 // GET /api/v1/audit/login-logs

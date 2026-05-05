@@ -9,6 +9,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 
 	apimodel "gobaseproject/server/internal/model/api"
+	"gobaseproject/server/pkg/routereg"
 )
 
 type SQLRepository struct {
@@ -250,4 +251,38 @@ func escapeLike(s string) string {
 	s = strings.ReplaceAll(s, `%`, `\%`)
 	s = strings.ReplaceAll(s, `_`, `\_`)
 	return s
+}
+
+// ── Route sync ─────────────────────────────────────────────────────────────
+
+// UpsertRoutes inserts or updates API resource records from the route registry.
+// Existing rows are matched on (api_path, api_method); group/desc are refreshed
+// and deleted_at is cleared so soft-deleted entries come back automatically.
+func (r *SQLRepository) UpsertRoutes(ctx context.Context, routes []routereg.Route) error {
+	if len(routes) == 0 {
+		return nil
+	}
+	placeholders := make([]string, len(routes))
+	args := make([]interface{}, 0, len(routes)*4)
+	for i, rt := range routes {
+		placeholders[i] = "(?, ?, ?, ?, 1)"
+		args = append(args, rt.Path, rt.Method, rt.Group, rt.Desc)
+	}
+	query := `INSERT INTO gbp_api_resources (api_path, api_method, api_group, api_desc, api_status) VALUES ` +
+		strings.Join(placeholders, ",") +
+		` ON DUPLICATE KEY UPDATE api_group=VALUES(api_group), api_desc=VALUES(api_desc), api_status=1, deleted_at=NULL`
+	_, err := r.db.ExecContext(ctx, query, args...)
+	return err
+}
+
+// GrantSuperAdmin ensures role_id=1 has an allow policy for every active API resource.
+func (r *SQLRepository) GrantSuperAdmin(ctx context.Context) error {
+	_, err := r.db.ExecContext(ctx, `
+INSERT INTO gbp_permission_policies
+  (subject_type, subject_id, resource_type, resource_id, resource_key, action, effect, policy_status)
+SELECT 'role', 1, 'api', a.id, CONCAT(a.api_method, ':', a.api_path), a.api_method, 'allow', 1
+FROM gbp_api_resources a
+WHERE a.deleted_at IS NULL
+ON DUPLICATE KEY UPDATE deleted_at=NULL, policy_status=1`)
+	return err
 }

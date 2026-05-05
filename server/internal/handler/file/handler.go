@@ -14,6 +14,7 @@ import (
 	filemodel "gobaseproject/server/internal/model/file"
 	fileservice "gobaseproject/server/internal/service/file"
 	"gobaseproject/server/pkg/response"
+	"gobaseproject/server/pkg/routereg"
 )
 
 const maxMultipartMemory = 32 << 20 // 32 MB in memory, rest on disk
@@ -36,6 +37,11 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/files", h.list)
 	mux.HandleFunc("DELETE /api/v1/files/{id}", h.delete)
 	mux.HandleFunc("GET /api/v1/files/{id}/raw", h.serve)
+
+	routereg.Add("POST",   "/api/v1/files",          "file", "上传文件")
+	routereg.Add("GET",    "/api/v1/files",           "file", "文件列表")
+	routereg.Add("DELETE", "/api/v1/files/{id}",      "file", "删除文件")
+	routereg.Add("GET",    "/api/v1/files/{id}/raw",  "file", "下载/预览文件")
 }
 
 // POST /api/v1/files — multipart upload, field name "file"

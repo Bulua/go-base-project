@@ -9,6 +9,7 @@ import (
 	authmodel "gobaseproject/server/internal/model/auth"
 	authservice "gobaseproject/server/internal/service/auth"
 	"gobaseproject/server/pkg/response"
+	"gobaseproject/server/pkg/routereg"
 )
 
 type contextKey struct{}
@@ -27,12 +28,17 @@ func NewHandler(service *authservice.Service) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/api/v1/auth/login", h.login)
+	mux.HandleFunc("/api/v1/auth/login", h.login)     // skip rule – not in api_resources
+	mux.HandleFunc("/api/v1/auth/refresh", h.refresh) // skip rule – not in api_resources
 	mux.HandleFunc("/api/v1/auth/logout", h.withAuth(h.logout))
-	mux.HandleFunc("/api/v1/auth/refresh", h.refresh)
 	mux.HandleFunc("/api/v1/auth/profile", h.withAuth(h.profile))
 	mux.HandleFunc("/api/v1/auth/routes", h.withAuth(h.routes))
 	mux.HandleFunc("/api/v1/auth/actions", h.withAuth(h.actions))
+
+	routereg.Add("POST", "/api/v1/auth/logout",  "auth", "退出登录")
+	routereg.Add("GET",  "/api/v1/auth/profile", "auth", "当前用户信息")
+	routereg.Add("GET",  "/api/v1/auth/routes",  "auth", "菜单路由")
+	routereg.Add("GET",  "/api/v1/auth/actions", "auth", "按钮权限")
 }
 
 func (h *Handler) login(w http.ResponseWriter, r *http.Request) {

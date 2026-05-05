@@ -11,6 +11,7 @@ import (
 	authservice "gobaseproject/server/internal/service/auth"
 	dictservice "gobaseproject/server/internal/service/dict"
 	"gobaseproject/server/pkg/response"
+	"gobaseproject/server/pkg/routereg"
 )
 
 type TokenParser interface {
@@ -36,6 +37,15 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/v1/dictionaries/{id}/items", h.withAuth(h.createItem))
 	mux.HandleFunc("PUT /api/v1/dictionary-items/{id}", h.withAuth(h.updateItem))
 	mux.HandleFunc("DELETE /api/v1/dictionary-items/{id}", h.withAuth(h.deleteItem))
+
+	routereg.Add("GET",    "/api/v1/dictionaries/{id}/items", "dict", "查询字典项")
+	routereg.Add("GET",    "/api/v1/dictionaries",            "dict", "字典列表")
+	routereg.Add("POST",   "/api/v1/dictionaries",            "dict", "创建字典")
+	routereg.Add("PUT",    "/api/v1/dictionaries/{id}",       "dict", "修改字典")
+	routereg.Add("DELETE", "/api/v1/dictionaries/{id}",       "dict", "删除字典")
+	routereg.Add("POST",   "/api/v1/dictionaries/{id}/items", "dict", "新增字典项")
+	routereg.Add("PUT",    "/api/v1/dictionary-items/{id}",   "dict", "修改字典项")
+	routereg.Add("DELETE", "/api/v1/dictionary-items/{id}",   "dict", "删除字典项")
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────────────

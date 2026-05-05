@@ -7,8 +7,9 @@ import (
 	"strings"
 	"time"
 
-	auditmodel "gobaseproject/server/internal/model/audit"
 	apimodel "gobaseproject/server/internal/model/api"
+	auditmodel "gobaseproject/server/internal/model/audit"
+	"gobaseproject/server/pkg/routereg"
 )
 
 const (
@@ -42,6 +43,9 @@ type repository interface {
 	ExistsSkipRule(ctx context.Context, path, method string, excludeID uint64) (bool, error)
 	CreateSkipRule(ctx context.Context, p apimodel.SaveSkipRulePayload) (uint64, error)
 	DeleteSkipRule(ctx context.Context, id uint64) error
+
+	UpsertRoutes(ctx context.Context, routes []routereg.Route) error
+	GrantSuperAdmin(ctx context.Context) error
 }
 
 type AuditRepository interface {
@@ -228,6 +232,15 @@ func (s *Service) DeleteSkipRule(ctx context.Context, id uint64, actor apimodel.
 	}
 	s.logSuccess(ctx, actor, http.MethodDelete, path, http.StatusOK, fmt.Sprintf("deleted %s:%s", existing.APIMethod, existing.APIPath))
 	return nil
+}
+
+// SyncRoutes upserts all registered routes into gbp_api_resources and ensures
+// super_admin (role_id=1) has allow policies for every active API.
+func (s *Service) SyncRoutes(ctx context.Context, routes []routereg.Route) error {
+	if err := s.repo.UpsertRoutes(ctx, routes); err != nil {
+		return err
+	}
+	return s.repo.GrantSuperAdmin(ctx)
 }
 
 func validateAPI(p apimodel.SaveAPIPayload) error {

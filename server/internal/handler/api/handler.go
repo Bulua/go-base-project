@@ -11,6 +11,7 @@ import (
 	apimodel "gobaseproject/server/internal/model/api"
 	authservice "gobaseproject/server/internal/service/auth"
 	"gobaseproject/server/pkg/response"
+	"gobaseproject/server/pkg/routereg"
 )
 
 type apiService interface {
@@ -48,6 +49,15 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/api-skip-rules", h.withAuth(h.listSkipRules))
 	mux.HandleFunc("POST /api/v1/api-skip-rules", h.withAuth(h.createSkipRule))
 	mux.HandleFunc("DELETE /api/v1/api-skip-rules/{id}", h.withAuth(h.deleteSkipRule))
+
+	routereg.Add("GET",    "/api/v1/apis/groups",        "api", "API分组列表")
+	routereg.Add("GET",    "/api/v1/apis",               "api", "API资源列表")
+	routereg.Add("POST",   "/api/v1/apis",               "api", "创建API资源")
+	routereg.Add("PUT",    "/api/v1/apis/{id}",          "api", "修改API资源")
+	routereg.Add("DELETE", "/api/v1/apis/{id}",          "api", "删除API资源")
+	routereg.Add("GET",    "/api/v1/api-skip-rules",     "api", "白名单列表")
+	routereg.Add("POST",   "/api/v1/api-skip-rules",     "api", "创建白名单")
+	routereg.Add("DELETE", "/api/v1/api-skip-rules/{id}","api", "删除白名单")
 }
 
 // GET /api/v1/apis/groups

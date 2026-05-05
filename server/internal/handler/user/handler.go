@@ -11,6 +11,7 @@ import (
 	authservice "gobaseproject/server/internal/service/auth"
 	userservice "gobaseproject/server/internal/service/user"
 	"gobaseproject/server/pkg/response"
+	"gobaseproject/server/pkg/routereg"
 )
 
 type TokenParser interface {
@@ -36,6 +37,16 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("PUT /api/v1/users/{id}/status", h.withAuth(h.updateStatus))
 	mux.HandleFunc("PUT /api/v1/users/{id}/password", h.withAuth(h.resetPassword))
 	mux.HandleFunc("PUT /api/v1/users/{id}/roles", h.withAuth(h.assignRoles))
+
+	routereg.Add("GET",    "/api/v1/users",               "user", "用户列表")
+	routereg.Add("POST",   "/api/v1/users",               "user", "创建用户")
+	routereg.Add("GET",    "/api/v1/users/role-options",  "user", "角色选项")
+	routereg.Add("GET",    "/api/v1/users/{id}",          "user", "用户详情")
+	routereg.Add("PUT",    "/api/v1/users/{id}",          "user", "修改用户")
+	routereg.Add("DELETE", "/api/v1/users/{id}",          "user", "删除用户")
+	routereg.Add("PUT",    "/api/v1/users/{id}/status",   "user", "修改用户状态")
+	routereg.Add("PUT",    "/api/v1/users/{id}/password", "user", "重置密码")
+	routereg.Add("PUT",    "/api/v1/users/{id}/roles",    "user", "分配角色")
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
