@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, EditPen, Plus, Refresh, List } from '@element-plus/icons-vue'
 import {
@@ -148,8 +148,51 @@ const EMPTY_ITEM = (): SaveItemPayload => ({
 })
 const itemForm = reactive<SaveItemPayload>(EMPTY_ITEM())
 
+// ── 扩展颜色选择器 ─────────────────────────────────────────────────────────
+const PRESET_TYPES = ['', 'primary', 'success', 'warning', 'danger', 'info'] as const
+const CUSTOM_SENTINEL = '__custom__'
+
+const extraMode = ref<string>('')
+const customColor = ref<string>('#409EFF')
+
+const isCustomColor = computed(
+  () => !!itemForm.item_extra && !(PRESET_TYPES as readonly string[]).includes(itemForm.item_extra),
+)
+
+const customTagStyle = computed(() =>
+  itemForm.item_extra
+    ? { backgroundColor: itemForm.item_extra, borderColor: itemForm.item_extra, color: '#fff' }
+    : {},
+)
+
+function onExtraModeChange(val: string) {
+  if (val === CUSTOM_SENTINEL) {
+    itemForm.item_extra = customColor.value
+  } else {
+    itemForm.item_extra = val || null
+  }
+}
+
+function onCustomColorChange(val: string | null) {
+  if (val) itemForm.item_extra = val
+}
+
+function syncExtraMode(extra: string | null | undefined) {
+  const v = extra ?? ''
+  if ((PRESET_TYPES as readonly string[]).includes(v)) {
+    extraMode.value = v
+  } else if (v) {
+    extraMode.value = CUSTOM_SENTINEL
+    customColor.value = v
+  } else {
+    extraMode.value = ''
+  }
+}
+
 function openItemCreate() {
   Object.assign(itemForm, EMPTY_ITEM())
+  extraMode.value = ''
+  customColor.value = '#409EFF'
   editingItemId.value = null
   itemFormTitle.value = '新增字典项'
   itemFormVisible.value = true
@@ -164,6 +207,7 @@ function openItemEdit(item: DictItem) {
     sort_no: item.sort_no,
     parent_id: item.parent_id,
   })
+  syncExtraMode(item.item_extra)
   editingItemId.value = item.id
   itemFormTitle.value = '编辑字典项'
   itemFormVisible.value = true
@@ -342,8 +386,20 @@ function formatDateTime(value?: string | null) {
             <span class="code-text">{{ row.item_value }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="item_extra" label="扩展" min-width="100" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.item_extra ?? '—' }}</template>
+        <el-table-column prop="item_extra" label="扩展" min-width="110">
+          <template #default="{ row }">
+            <template v-if="!row.item_extra">—</template>
+            <el-tag
+              v-else-if="(PRESET_TYPES as readonly string[]).includes(row.item_extra)"
+              :type="row.item_extra || undefined"
+              size="small"
+            >{{ row.item_label }}</el-tag>
+            <el-tag
+              v-else
+              :style="{ backgroundColor: row.item_extra, borderColor: row.item_extra, color: '#fff' }"
+              size="small"
+            >{{ row.item_label }}</el-tag>
+          </template>
         </el-table-column>
         <el-table-column prop="sort_no" label="排序" width="70" />
         <el-table-column label="状态" width="80">
@@ -385,7 +441,59 @@ function formatDateTime(value?: string | null) {
           </el-form-item>
         </div>
         <el-form-item label="扩展信息">
-          <el-input v-model="itemForm.item_extra" placeholder="可选，如颜色标识 success / danger" />
+          <div class="extra-picker">
+            <div class="extra-picker-row">
+              <el-select
+                v-model="extraMode"
+                style="width: 160px"
+                @change="onExtraModeChange"
+              >
+                <el-option value="" label="无" />
+                <el-option value="primary" label="primary">
+                  <el-tag type="primary" size="small" style="pointer-events:none">primary</el-tag>
+                </el-option>
+                <el-option value="success" label="success">
+                  <el-tag type="success" size="small" style="pointer-events:none">success</el-tag>
+                </el-option>
+                <el-option value="warning" label="warning">
+                  <el-tag type="warning" size="small" style="pointer-events:none">warning</el-tag>
+                </el-option>
+                <el-option value="danger" label="danger">
+                  <el-tag type="danger" size="small" style="pointer-events:none">danger</el-tag>
+                </el-option>
+                <el-option value="info" label="info">
+                  <el-tag type="info" size="small" style="pointer-events:none">info</el-tag>
+                </el-option>
+                <el-option value="__custom__" label="自定义颜色">
+                  <span class="custom-color-opt">
+                    <span class="custom-color-dot" :style="{ background: customColor }" />
+                    自定义颜色
+                  </span>
+                </el-option>
+              </el-select>
+
+              <el-color-picker
+                v-if="extraMode === '__custom__'"
+                v-model="customColor"
+                show-alpha
+                @change="onCustomColorChange"
+              />
+            </div>
+
+            <div v-if="itemForm.item_extra !== null && itemForm.item_extra !== ''" class="extra-preview">
+              <span class="extra-preview-label">预览：</span>
+              <el-tag
+                v-if="!isCustomColor"
+                :type="(itemForm.item_extra as any) || undefined"
+                size="small"
+              >{{ itemForm.item_label || '示例标签' }}</el-tag>
+              <el-tag
+                v-else
+                :style="customTagStyle"
+                size="small"
+              >{{ itemForm.item_label || '示例标签' }}</el-tag>
+            </div>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -434,5 +542,47 @@ function formatDateTime(value?: string | null) {
 
 .drawer-toolbar {
   margin-bottom: 14px;
+}
+
+.extra-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.extra-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.extra-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--el-fill-color-light);
+  width: fit-content;
+}
+
+.extra-preview-label {
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
+
+.custom-color-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.custom-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--el-border-color);
+  flex-shrink: 0;
 }
 </style>
