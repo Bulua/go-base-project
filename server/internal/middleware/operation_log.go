@@ -17,7 +17,7 @@ type logWriter interface {
 	InsertOperationLog(ctx context.Context, log auditmodel.OperationLog) error
 }
 
-// OperationLog records POST/PUT/DELETE requests into gbp_operation_audit_logs.
+// OperationLog records all HTTP requests into gbp_operation_audit_logs.
 // It wraps the inner handler, captures response status/body, and writes async.
 func OperationLog(repo logWriter, tokens jwtParser) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -62,7 +62,7 @@ func OperationLog(repo logWriter, tokens jwtParser) func(http.Handler) http.Hand
 
 func shouldRecord(method string) bool {
 	switch method {
-	case http.MethodPost, http.MethodPut, http.MethodDelete:
+	case http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodPatch:
 		return true
 	}
 	return false

@@ -11,7 +11,7 @@ const total = ref(0)
 
 const filters = reactive<LoginLogQuery>({
   page: 1,
-  page_size: 20,
+  page_size: 10,
   keyword: '',
   login_success: 0,
   start_date: '',
@@ -118,16 +118,13 @@ onMounted(load)
         <el-form-item>
           <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
           <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+          <el-button type="danger" plain :icon="Delete" @click="handleCleanup">清理旧日志</el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
     <!-- Table card -->
     <el-card shadow="never" class="table-card">
-      <div class="table-toolbar">
-        <span class="table-title">登录日志</span>
-        <el-button type="danger" plain :icon="Delete" @click="handleCleanup">清理旧日志</el-button>
-      </div>
 
       <el-table v-loading="loading" :data="items" border stripe>
         <el-table-column prop="id" label="ID" width="80" />
@@ -157,7 +154,7 @@ onMounted(load)
           v-model:current-page="filters.page"
           v-model:page-size="filters.page_size"
           :total="total"
-          :page-sizes="[20, 50, 100]"
+          :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next"
           @current-change="handlePageChange"
           @size-change="handleSizeChange"
@@ -176,17 +173,6 @@ onMounted(load)
 }
 .filter-card :deep(.el-card__body) {
   padding-bottom: 0;
-}
-.table-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-.table-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #303133;
 }
 .pagination-wrapper {
   display: flex;
