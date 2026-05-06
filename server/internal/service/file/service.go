@@ -19,7 +19,7 @@ import (
 const (
 	defaultPageSize = 10
 	maxPageSize     = 200
-	DefaultMaxBytes = 50 << 20 // 50 MB
+	DefaultMaxBytes = 10 << 20 // 10 MB
 )
 
 type repository interface {

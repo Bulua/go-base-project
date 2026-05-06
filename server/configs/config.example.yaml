@@ -26,3 +26,7 @@ codegen:
   # Path to web/src relative to server working directory.
   # Set to empty string to disable auto file generation (e.g. in Docker).
   web_src_root: ../web/src
+
+upload:
+  dir: ./uploads
+  max_size_mb: 10

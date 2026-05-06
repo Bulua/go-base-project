@@ -28,8 +28,8 @@ type Config struct {
 }
 
 type UploadConfig struct {
-	Dir       string `yaml:"dir"`        // local storage root, default ./uploads
-	MaxSizeMB int64  `yaml:"max_size_mb"` // per-file limit in MB, default 50
+	Dir       string `yaml:"dir"`         // local storage root, default ./uploads
+	MaxSizeMB int64  `yaml:"max_size_mb"` // per-file limit in MB, default 10
 }
 
 type CodeGenConfig struct {
