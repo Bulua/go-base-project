@@ -4,16 +4,16 @@ app:
   port: 8080
 
 database:
-  host: 120.53.251.75
-  port: 13307
+  host: localhost
+  port: 3306
   name: go_base_project
   user: root
   password: change-me
   charset: utf8mb4
 
 redis:
-  host: 120.53.251.75
-  port: 16379
+  host: localhost
+  port: 6379
   password: change-me
   db: 0
 
