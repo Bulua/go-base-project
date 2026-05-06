@@ -16,25 +16,44 @@ Copy-Item .env.example .env
 
 Edit `.env` before starting services.
 
-## 2. Remote Database Mode
+## 2. Full Local Docker Mode
 
-The default `.env.example` uses:
+Use this when MySQL, Redis, server, and web all run in Docker:
 
-```text
-DB_HOST=120.53.251.75
-DB_PORT=13307
-DB_NAME=go_base_project
-REDIS_HOST=120.53.251.75
-REDIS_PORT_IN_CONTAINER=16379
+```bash
+docker compose -f docker-compose.yaml -f docker-compose.local.yaml up -d --build
 ```
 
-Start app services:
+`docker-compose.local.yaml` overrides the server container to use Docker service names:
+
+```text
+DB_HOST=mysql
+DB_PORT=3306
+REDIS_HOST=redis
+REDIS_PORT_IN_CONTAINER=6379
+```
+
+## 3. External Database Mode
+
+Use this when MySQL and Redis already run outside this Compose project.
+
+When the server runs inside Docker, `localhost` means the server container itself. Do not use `localhost` in `.env` to reach host services from the container.
+
+Use one of these values instead:
+
+```text
+Docker Compose service: DB_HOST=mysql, REDIS_HOST=redis
+Docker Desktop host service: DB_HOST=host.docker.internal, REDIS_HOST=host.docker.internal
+Remote service: DB_HOST=<server-ip-or-domain>, REDIS_HOST=<server-ip-or-domain>
+```
+
+Then start app services:
 
 ```bash
 docker compose up -d --build
 ```
 
-## 3. Local Database Mode
+## 4. Local Database Profile
 
 To start MySQL locally with Docker:
 
@@ -58,7 +77,7 @@ The local database is initialized from:
 deploy/mysql/init
 ```
 
-## 4. Local Redis Mode
+## 5. Local Redis Profile
 
 To start Redis locally with Docker:
 
@@ -73,14 +92,14 @@ REDIS_HOST=redis
 REDIS_PORT_IN_CONTAINER=6379
 ```
 
-## 5. Endpoints
+## 6. Endpoints
 
 ```text
 Frontend: http://localhost:5173
 Backend health: http://localhost:8080/api/v1/health
 ```
 
-## 6. Useful Commands
+## 7. Useful Commands
 
 ```bash
 docker compose ps

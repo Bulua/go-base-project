@@ -75,6 +75,10 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
+When the server runs inside Docker, `localhost` means the server container itself.
+Use service names such as `mysql` and `redis` for Compose-managed containers.
+On Docker Desktop, use `host.docker.internal` when a container must connect to a database or Redis running directly on the host machine.
+
 ### Access
 
 | Service | URL |
@@ -97,15 +101,15 @@ APP_ENV=development
 JWT_SECRET=replace-with-a-long-random-string   # required
 
 # ── Database ───────────────────────────────────────────────────────────────────
-DB_HOST=120.53.251.75   # set to "mysql" when using docker-compose.local.yaml
-DB_PORT=13307           # set to "3306"  when using docker-compose.local.yaml
+DB_HOST=localhost       # direct host run; docker-compose.local.yaml overrides this to "mysql"
+DB_PORT=3306
 DB_NAME=go_base_project
 DB_USER=root
 DB_PASSWORD=change-me
 
 # ── Redis ──────────────────────────────────────────────────────────────────────
-REDIS_HOST=120.53.251.75    # set to "redis" when using docker-compose.local.yaml
-REDIS_PORT_IN_CONTAINER=16379  # set to "6379" when using docker-compose.local.yaml
+REDIS_HOST=localhost    # direct host run; docker-compose.local.yaml overrides this to "redis"
+REDIS_PORT_IN_CONTAINER=6379
 REDIS_PASSWORD=change-me
 
 # ── Local containers (only used with docker-compose.local.yaml) ────────────────
@@ -113,6 +117,7 @@ MYSQL_ROOT_PASSWORD=change-me   # must match DB_PASSWORD
 ```
 
 > `docker-compose.local.yaml` overrides `DB_HOST` and `REDIS_HOST` automatically — you only need to keep passwords consistent.
+> Do not use `localhost` inside a container to reach host services. Use `host.docker.internal` on Docker Desktop, or a real network address.
 
 ---
 
