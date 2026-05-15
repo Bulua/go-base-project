@@ -192,7 +192,7 @@ onMounted(load)
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="request_path" label="路径" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="request_path" label="路径" min-width="80" show-overflow-tooltip />
         <el-table-column label="状态码" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="statusTag(row.status_code)" size="small">
